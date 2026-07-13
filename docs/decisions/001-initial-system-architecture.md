@@ -94,15 +94,15 @@ Kafka and Kubernetes will not be added during the initial phase.
 
 NestJS provides:
 
-* Strong TypeScript support
-* Dependency injection
-* Modular application structure
-* Guards and interceptors
-* Request validation
-* OpenAPI integration
-* REST and GraphQL support
-* gRPC support
-* Testable service boundaries
+- Strong TypeScript support
+- Dependency injection
+- Modular application structure
+- Guards and interceptors
+- Request validation
+- OpenAPI integration
+- REST and GraphQL support
+- gRPC support
+- Testable service boundaries
 
 It is appropriate for authentication, authorization, orchestration, persistence, and public API management.
 
@@ -110,56 +110,56 @@ It is appropriate for authentication, authorization, orchestration, persistence,
 
 Python provides a mature ecosystem for:
 
-* Data analysis
-* Statistics
-* Machine learning
-* Numerical computation
-* Feature engineering
-* Model evaluation
-* Probability estimation
+- Data analysis
+- Statistics
+- Machine learning
+- Numerical computation
+- Feature engineering
+- Model evaluation
+- Probability estimation
 
 The Analysis Service can use libraries such as:
 
-* pandas
-* Polars
-* NumPy
-* SciPy
-* scikit-learn
-* XGBoost
-* LightGBM
+- pandas
+- Polars
+- NumPy
+- SciPy
+- scikit-learn
+- XGBoost
+- LightGBM
 
 ### PostgreSQL for durable data
 
 PostgreSQL provides:
 
-* Strong relational modeling
-* Transactions
-* Data integrity
-* Indexing
-* JSON support
-* Mature tooling
-* Reliable production hosting options
+- Strong relational modeling
+- Transactions
+- Data integrity
+- Indexing
+- JSON support
+- Mature tooling
+- Reliable production hosting options
 
 ### Redis for temporary state
 
 Redis provides:
 
-* Low-latency caching
-* Expiring values
-* Atomic counters
-* Rate-limiting support
-* Temporary job state
-* Idempotency support
+- Low-latency caching
+- Expiring values
+- Atomic counters
+- Rate-limiting support
+- Temporary job state
+- Idempotency support
 
 ### Object storage for files
 
 Object storage is better suited than PostgreSQL for:
 
-* Large datasets
-* Reports
-* Exports
-* Model files
-* Binary artifacts
+- Large datasets
+- Reports
+- Exports
+- Model files
+- Binary artifacts
 
 The database will store metadata and object references rather than large binary content.
 
@@ -173,10 +173,10 @@ This option would place the frontend, application API, and possibly analysis log
 
 It was rejected because:
 
-* Python analytical tooling would be awkward to integrate.
-* Service responsibilities would become mixed.
-* Independent scaling would be difficult.
-* The application would become increasingly difficult to maintain.
+- Python analytical tooling would be awkward to integrate.
+- Service responsibilities would become mixed.
+- Independent scaling would be difficult.
+- The application would become increasingly difficult to maintain.
 
 ## NestJS-only backend
 
@@ -184,10 +184,10 @@ This option would implement both application logic and prediction logic in TypeS
 
 It was rejected because:
 
-* The Python analytics ecosystem is significantly stronger.
-* Most planned machine-learning libraries are Python-first.
-* Numerical workflows would be less natural to implement.
-* Model-development workflows would be constrained.
+- The Python analytics ecosystem is significantly stronger.
+- Most planned machine-learning libraries are Python-first.
+- Numerical workflows would be less natural to implement.
+- Model-development workflows would be constrained.
 
 ## Python-only backend
 
@@ -195,10 +195,10 @@ This option would implement application APIs and analytical logic in one Python 
 
 It was rejected because:
 
-* The project requires substantial application orchestration.
-* NestJS provides stronger conventions for the planned TypeScript application layer.
-* Separating analytical logic prevents the Python service from becoming a monolith.
-* The selected architecture demonstrates polyglot service design.
+- The project requires substantial application orchestration.
+- NestJS provides stronger conventions for the planned TypeScript application layer.
+- Separating analytical logic prevents the Python service from becoming a monolith.
+- The selected architecture demonstrates polyglot service design.
 
 ## Kafka during the foundation phase
 
@@ -206,11 +206,11 @@ Kafka was considered for asynchronous communication and event processing.
 
 It was rejected for the initial phase because:
 
-* Current request volume does not require event streaming.
-* No event-replay requirement exists yet.
-* No multiple-consumer event topology exists yet.
-* It would increase development and operational complexity.
-* Direct HTTP communication is currently sufficient.
+- Current request volume does not require event streaming.
+- No event-replay requirement exists yet.
+- No multiple-consumer event topology exists yet.
+- It would increase development and operational complexity.
+- Direct HTTP communication is currently sufficient.
 
 ## Kubernetes during the foundation phase
 
@@ -218,10 +218,10 @@ Kubernetes was considered for container orchestration.
 
 It was rejected for the initial phase because:
 
-* The application does not yet require cluster orchestration.
-* Service scale is currently limited.
-* Kubernetes would add unnecessary deployment complexity.
-* Simpler deployment systems are sufficient for early releases.
+- The application does not yet require cluster orchestration.
+- Service scale is currently limited.
+- Kubernetes would add unnecessary deployment complexity.
+- Simpler deployment systems are sufficient for early releases.
 
 ---
 
@@ -229,43 +229,43 @@ It was rejected for the initial phase because:
 
 ### Positive consequences
 
-* Clear separation between UI, application logic, and analytics
-* Independent service development
-* Independent service deployment
-* Access to the TypeScript and Python ecosystems
-* Easier domain expansion
-* Better testing boundaries
-* Reduced frontend access to internal infrastructure
-* Scalable database and file-storage model
-* Architecture suitable for a professional portfolio project
+- Clear separation between UI, application logic, and analytics
+- Independent service development
+- Independent service deployment
+- Access to the TypeScript and Python ecosystems
+- Easier domain expansion
+- Better testing boundaries
+- Reduced frontend access to internal infrastructure
+- Scalable database and file-storage model
+- Architecture suitable for a professional portfolio project
 
 ### Negative consequences
 
-* More than one programming language must be maintained
-* Internal service contracts must be versioned
-* Local development requires multiple processes
-* Distributed tracing and error handling are more complex
-* Network failures must be handled between services
-* Shared data structures cannot be assumed automatically
+- More than one programming language must be maintained
+- Internal service contracts must be versioned
+- Local development requires multiple processes
+- Distributed tracing and error handling are more complex
+- Network failures must be handled between services
+- Shared data structures cannot be assumed automatically
 
 ### Risks
 
-* The Core API could become an oversized orchestration service.
-* The Analysis Service could become a collection of unrelated domain logic.
-* Internal contracts could drift between TypeScript and Python.
-* Direct database access from multiple services could create ownership confusion.
-* Redis could be incorrectly treated as permanent storage.
+- The Core API could become an oversized orchestration service.
+- The Analysis Service could become a collection of unrelated domain logic.
+- Internal contracts could drift between TypeScript and Python.
+- Direct database access from multiple services could create ownership confusion.
+- Redis could be incorrectly treated as permanent storage.
 
 ### Mitigations
 
-* Organize the Core API by domain modules.
-* Organize the Analysis Service by analytical domain and workflow.
-* Define versioned shared contracts.
-* Establish explicit data ownership.
-* Store durable records in PostgreSQL.
-* Require expiration policies for Redis keys.
-* Document all service boundaries.
-* Add contract testing as the system develops.
+- Organize the Core API by domain modules.
+- Organize the Analysis Service by analytical domain and workflow.
+- Define versioned shared contracts.
+- Establish explicit data ownership.
+- Store durable records in PostgreSQL.
+- Require expiration policies for Redis keys.
+- Document all service boundaries.
+- Add contract testing as the system develops.
 
 ---
 
@@ -288,14 +288,14 @@ It was rejected for the initial phase because:
 
 This decision should be reviewed when any of the following occurs:
 
-* Analysis requests routinely exceed normal HTTP request durations
-* Multiple services must consume the same domain events
-* The platform begins processing continuous market-data streams
-* Model-training jobs require background execution
-* Deployment requires automatic multi-node scaling
-* The number of services materially increases
-* Cross-service failures become difficult to manage
-* The platform requires regional redundancy
-* Regulatory or audit requirements change data boundaries
+- Analysis requests routinely exceed normal HTTP request durations
+- Multiple services must consume the same domain events
+- The platform begins processing continuous market-data streams
+- Model-training jobs require background execution
+- Deployment requires automatic multi-node scaling
+- The number of services materially increases
+- Cross-service failures become difficult to manage
+- The platform requires regional redundancy
+- Regulatory or audit requirements change data boundaries
 
 A review does not automatically mean Kafka or Kubernetes should be adopted. It means the architecture should be evaluated against measured requirements.

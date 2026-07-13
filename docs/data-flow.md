@@ -6,12 +6,12 @@ This document describes how data moves between ForecastMe components.
 
 The initial system includes:
 
-* Next.js Web Application
-* NestJS Core API
-* Python Analysis Service
-* PostgreSQL
-* Redis
-* Object Storage
+- Next.js Web Application
+- NestJS Core API
+- Python Analysis Service
+- PostgreSQL
+- Redis
+- Object Storage
 
 The NestJS Core API is the main gateway between the browser and the platform's internal services.
 
@@ -81,12 +81,12 @@ What is the estimated probability that Team A defeats Team B?
 
 The Web Application captures:
 
-* User question
-* Selected analysis domain
-* Optional time horizon
-* Optional risk preference
-* Optional user constraints
-* Optional attached data-source references
+- User question
+- Selected analysis domain
+- Optional time horizon
+- Optional risk preference
+- Optional user constraints
+- Optional attached data-source references
 
 ### Step 2: API request
 
@@ -109,13 +109,13 @@ Example conceptual request:
 
 The Core API:
 
-* Identifies the user
-* Validates the request schema
-* Applies authorization rules
-* Applies rate limits
-* Sanitizes accepted input
-* Generates a correlation ID
-* Creates an analysis record
+- Identifies the user
+- Validates the request schema
+- Applies authorization rules
+- Applies rate limits
+- Sanitizes accepted input
+- Generates a correlation ID
+- Creates an analysis record
 
 ### Step 4: Cache lookup
 
@@ -123,11 +123,11 @@ The Core API may check Redis for an equivalent recent analysis.
 
 A cached result should only be used when:
 
-* The input is equivalent
-* The data sources have not become stale
-* The model version is compatible
-* The cache has not expired
-* The user is authorized to access the result
+- The input is equivalent
+- The data sources have not become stale
+- The model version is compatible
+- The cache has not expired
+- The user is authorized to access the result
 
 ### Step 5: Analysis-service request
 
@@ -155,17 +155,17 @@ The internal request should avoid containing unnecessary private user informatio
 
 The Analysis Service may perform:
 
-* Input classification
-* Data validation
-* Data-source selection
-* Data retrieval
-* Data cleaning
-* Feature construction
-* Model selection
-* Model inference
-* Probability calibration
-* Confidence estimation
-* Explanation generation
+- Input classification
+- Data validation
+- Data-source selection
+- Data retrieval
+- Data cleaning
+- Feature construction
+- Model selection
+- Model inference
+- Probability calibration
+- Confidence estimation
+- Explanation generation
 
 ### Step 7: Structured result
 
@@ -182,12 +182,8 @@ Example conceptual response:
     "probability": 0.58,
     "confidence": 0.71
   },
-  "assumptions": [
-    "Current squad availability remains unchanged"
-  ],
-  "limitations": [
-    "Late injuries may materially change the estimate"
-  ],
+  "assumptions": ["Current squad availability remains unchanged"],
+  "limitations": ["Late injuries may materially change the estimate"],
   "model": {
     "name": "sports_match_baseline",
     "version": "0.1.0"
@@ -205,21 +201,21 @@ The Core API stores the result in PostgreSQL.
 
 Stored information should eventually include:
 
-* Analysis ID
-* User ID
-* Original question
-* Domain
-* Status
-* Input parameters
-* Output probability
-* Confidence value
-* Assumptions
-* Limitations
-* Model name
-* Model version
-* Creation time
-* Completion time
-* Correlation ID
+- Analysis ID
+- User ID
+- Original question
+- Domain
+- Status
+- Input parameters
+- Output probability
+- Confidence value
+- Assumptions
+- Limitations
+- Model name
+- Model version
+- Creation time
+- Completion time
+- Correlation ID
 
 ### Step 9: Response to frontend
 
@@ -237,9 +233,9 @@ Users may upload datasets for analysis.
 
 Supported formats may eventually include:
 
-* CSV
-* Excel
-* JSON
+- CSV
+- Excel
+- JSON
 
 ```mermaid
 sequenceDiagram
@@ -280,49 +276,49 @@ sequenceDiagram
 
 The Web Application handles:
 
-* File selection
-* Client-side size checks
-* Upload progress
-* User feedback
-* Upload cancellation
+- File selection
+- Client-side size checks
+- Upload progress
+- User feedback
+- Upload cancellation
 
 The Core API handles:
 
-* Authentication
-* File-policy enforcement
-* Upload authorization
-* Ownership records
-* Metadata persistence
-* Analysis orchestration
+- Authentication
+- File-policy enforcement
+- Upload authorization
+- Ownership records
+- Metadata persistence
+- Analysis orchestration
 
 Object storage handles:
 
-* File bytes
-* Durable object storage
-* Object retrieval
-* Lifecycle policies
+- File bytes
+- Durable object storage
+- Object retrieval
+- Lifecycle policies
 
 The Analysis Service handles:
 
-* File parsing
-* Schema detection
-* Dataset profiling
-* Missing-value analysis
-* Numeric summaries
-* Type inference
-* Analytical preprocessing
+- File parsing
+- Schema detection
+- Dataset profiling
+- Missing-value analysis
+- Numeric summaries
+- Type inference
+- Analytical preprocessing
 
 PostgreSQL stores:
 
-* File owner
-* Original filename
-* Storage object key
-* MIME type
-* File size
-* Checksum
-* Upload status
-* Dataset profile
-* Creation timestamp
+- File owner
+- Original filename
+- Storage object key
+- MIME type
+- File size
+- Checksum
+- Upload status
+- Dataset profile
+- Creation timestamp
 
 ---
 
@@ -356,12 +352,12 @@ Redis is used only for temporary or derived state.
 
 Potential Redis data includes:
 
-* Cached analysis results
-* Rate-limit counters
-* Idempotency keys
-* Temporary analysis progress
-* Distributed locks
-* Short-lived provider responses
+- Cached analysis results
+- Rate-limit counters
+- Idempotency keys
+- Temporary analysis progress
+- Distributed locks
+- Short-lived provider responses
 
 Example conceptual key structure:
 
@@ -427,11 +423,11 @@ The Core API should map this to a stable public error:
 
 The frontend should display a useful message without exposing:
 
-* Stack traces
-* Internal hostnames
-* Database details
-* Provider credentials
-* Internal file paths
+- Stack traces
+- Internal hostnames
+- Database details
+- Provider credentials
+- Internal file paths
 
 ---
 
@@ -443,30 +439,30 @@ ForecastMe data should eventually be classified as:
 
 Examples:
 
-* Public sports results
-* Public stock-market data
-* Public weather data
-* Published economic indicators
+- Public sports results
+- Public stock-market data
+- Public weather data
+- Published economic indicators
 
 ### User-owned data
 
 Examples:
 
-* Uploaded datasets
-* Saved forecasts
-* Analysis history
-* User preferences
-* Portfolio configurations
+- Uploaded datasets
+- Saved forecasts
+- Analysis history
+- User preferences
+- Portfolio configurations
 
 ### Sensitive operational data
 
 Examples:
 
-* API keys
-* Database credentials
-* Storage credentials
-* Authentication secrets
-* Internal service tokens
+- API keys
+- Database credentials
+- Storage credentials
+- Authentication secrets
+- Internal service tokens
 
 Sensitive operational data must remain server-side.
 
@@ -484,10 +480,10 @@ X-Correlation-ID: 8a23d94e-2f87-4a07-a33f-96a89ca17251
 
 The same identifier should appear in logs generated by:
 
-* Core API
-* Analysis Service
-* Database-operation logging
-* Object-storage workflow logging
+- Core API
+- Analysis Service
+- Database-operation logging
+- Object-storage workflow logging
 
 This makes it possible to trace one user operation across multiple services.
 

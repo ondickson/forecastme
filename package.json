@@ -4,9 +4,18 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "lint": "turbo run lint && pnpm python:lint",
+    "lint:fix": "turbo run lint:fix && pnpm python:lint:fix",
+    "format": "prettier --write . && pnpm python:format",
+    "format:check": "prettier --check . && pnpm python:format:check",
+    "typecheck": "turbo run typecheck && pnpm python:typecheck",
+    "test": "turbo run test && pnpm python:test",
+    "python:lint": "services\\prediction-service\\.venv\\Scripts\\python.exe -m ruff check services\\prediction-service",
+    "python:lint:fix": "services\\prediction-service\\.venv\\Scripts\\python.exe -m ruff check services\\prediction-service --fix",
+    "python:format": "services\\prediction-service\\.venv\\Scripts\\python.exe -m ruff format services\\prediction-service",
+    "python:format:check": "services\\prediction-service\\.venv\\Scripts\\python.exe -m ruff format services\\prediction-service --check",
+    "python:typecheck": "services\\prediction-service\\.venv\\Scripts\\python.exe -m mypy services\\prediction-service\\app",
+    "python:test": "services\\prediction-service\\.venv\\Scripts\\python.exe -m pytest services\\prediction-service"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

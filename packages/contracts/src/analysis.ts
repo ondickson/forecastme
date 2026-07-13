@@ -4,27 +4,27 @@
  * CUSTOM is used when a request does not fit an existing specialized domain.
  */
 export enum AnalysisDomain {
-  SPORTS = "sports",
-  BETTING = "betting",
-  STOCKS = "stocks",
-  CRYPTO = "crypto",
-  ECONOMICS = "economics",
-  WEATHER = "weather",
-  RISK = "risk",
-  DATASET = "dataset",
-  CUSTOM = "custom",
+  SPORTS = 'sports',
+  BETTING = 'betting',
+  STOCKS = 'stocks',
+  CRYPTO = 'crypto',
+  ECONOMICS = 'economics',
+  WEATHER = 'weather',
+  RISK = 'risk',
+  DATASET = 'dataset',
+  CUSTOM = 'custom',
 }
 
 /**
  * Lifecycle state of an analysis.
  */
 export enum AnalysisStatus {
-  PENDING = "pending",
-  QUEUED = "queued",
-  PROCESSING = "processing",
-  COMPLETED = "completed",
-  FAILED = "failed",
-  CANCELLED = "cancelled",
+  PENDING = 'pending',
+  QUEUED = 'queued',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled',
 }
 
 /**
@@ -35,7 +35,7 @@ export interface AnalysisOptions {
   includeSources?: boolean;
   includeConfidence?: boolean;
   timeHorizon?: string;
-  riskTolerance?: "low" | "medium" | "high";
+  riskTolerance?: 'low' | 'medium' | 'high';
 }
 
 /**
@@ -67,7 +67,7 @@ export interface AnalysisServiceRequest {
  */
 export interface AnalysisSource {
   name: string;
-  type: "api" | "dataset" | "document" | "model" | "manual";
+  type: 'api' | 'dataset' | 'document' | 'model' | 'manual';
   reference?: string;
   retrievedAt?: string;
 }

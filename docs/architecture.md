@@ -6,15 +6,15 @@ ForecastMe is a modular predictive intelligence platform designed to help users 
 
 The platform will eventually support multiple prediction domains, including:
 
-* Sports
-* Betting markets
-* Stocks
-* Cryptocurrency
-* Economics
-* Weather
-* Risk analysis
-* User-provided datasets
-* Custom probability questions
+- Sports
+- Betting markets
+- Stocks
+- Cryptocurrency
+- Economics
+- Weather
+- Risk analysis
+- User-provided datasets
+- Custom probability questions
 
 ForecastMe is not being designed as a single-purpose betting application. It is being designed as a general forecasting platform where domain-specific data sources, prediction models, and analytical workflows can be added incrementally.
 
@@ -57,35 +57,35 @@ New prediction domains must be introduced without requiring the entire applicati
 
 For example, the platform should eventually be able to add:
 
-* Football match predictions
-* Boxing outcome predictions
-* Stock-price forecasting
-* Portfolio risk analysis
-* Weather forecasting
-* Economic indicator forecasting
+- Football match predictions
+- Boxing outcome predictions
+- Stock-price forecasting
+- Portfolio risk analysis
+- Weather forecasting
+- Economic indicator forecasting
 
 ### 2.4 Traceability
 
 Every analysis should eventually be traceable through:
 
-* User input
-* Data sources
-* Model version
-* Processing steps
-* Generated probabilities
-* Confidence or uncertainty values
-* Final recommendation
-* Timestamp
+- User input
+- Data sources
+- Model version
+- Processing steps
+- Generated probabilities
+- Confidence or uncertainty values
+- Final recommendation
+- Timestamp
 
 ### 2.5 Responsible forecasting
 
 ForecastMe must distinguish between:
 
-* Observed facts
-* Model estimates
-* Assumptions
-* Uncertainty
-* Recommendations
+- Observed facts
+- Model estimates
+- Assumptions
+- Uncertainty
+- Recommendations
 
 The system must avoid presenting predictions as guaranteed outcomes.
 
@@ -142,14 +142,14 @@ The browser should not call the Python Analysis Service directly in the producti
 
 ### Technology
 
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* shadcn/ui
-* TanStack Query
-* Zustand
-* Recharts or Apache ECharts
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- TanStack Query
+- Zustand
+- Recharts or Apache ECharts
 
 ### Location
 
@@ -161,29 +161,29 @@ apps/web
 
 The Web Application is responsible for:
 
-* Rendering the user interface
-* Accepting user questions
-* Accepting dataset uploads
-* Displaying analysis results
-* Displaying probability estimates
-* Displaying charts and visualizations
-* Managing client-side interface state
-* Managing authenticated user sessions
-* Calling the Core API
-* Displaying analysis history
-* Displaying loading, validation, and error states
+- Rendering the user interface
+- Accepting user questions
+- Accepting dataset uploads
+- Displaying analysis results
+- Displaying probability estimates
+- Displaying charts and visualizations
+- Managing client-side interface state
+- Managing authenticated user sessions
+- Calling the Core API
+- Displaying analysis history
+- Displaying loading, validation, and error states
 
 ### Restrictions
 
 The Web Application must not:
 
-* Connect directly to PostgreSQL
-* Connect directly to Redis
-* Store object-storage credentials
-* Perform authoritative probability calculations
-* Train machine-learning models
-* Call the Analysis Service directly in production
-* Contain private provider API keys
+- Connect directly to PostgreSQL
+- Connect directly to Redis
+- Store object-storage credentials
+- Perform authoritative probability calculations
+- Train machine-learning models
+- Call the Analysis Service directly in production
+- Contain private provider API keys
 
 ---
 
@@ -191,12 +191,12 @@ The Web Application must not:
 
 ### Technology
 
-* NestJS
-* TypeScript
-* REST
-* OpenAPI
-* GraphQL where justified
-* gRPC for selected internal communication where justified
+- NestJS
+- TypeScript
+- REST
+- OpenAPI
+- GraphQL where justified
+- gRPC for selected internal communication where justified
 
 ### Location
 
@@ -210,21 +210,21 @@ The Core API is the central application and orchestration layer.
 
 It is responsible for:
 
-* Authentication
-* Authorization
-* User management
-* Request validation
-* Analysis request creation
-* Analysis orchestration
-* Analysis history
-* File-upload coordination
-* Data-source management
-* Usage controls
-* Rate limiting
-* Audit logging
-* Calling the Analysis Service
-* Persisting application records
-* Returning normalized responses to the Web Application
+- Authentication
+- Authorization
+- User management
+- Request validation
+- Analysis request creation
+- Analysis orchestration
+- Analysis history
+- File-upload coordination
+- Data-source management
+- Usage controls
+- Rate limiting
+- Audit logging
+- Calling the Analysis Service
+- Persisting application records
+- Returning normalized responses to the Web Application
 
 ### Why NestJS is the gateway
 
@@ -232,12 +232,12 @@ The NestJS application provides a single controlled entry point for the frontend
 
 This prevents the browser from needing to understand:
 
-* Internal service locations
-* Python-service contracts
-* Database credentials
-* Storage credentials
-* Model-provider credentials
-* Internal authentication mechanisms
+- Internal service locations
+- Python-service contracts
+- Database credentials
+- Storage credentials
+- Model-provider credentials
+- Internal authentication mechanisms
 
 The Core API protects internal services and converts user-facing requests into validated internal operations.
 
@@ -245,12 +245,12 @@ The Core API protects internal services and converts user-facing requests into v
 
 The Core API must not become the primary location for:
 
-* pandas-based data processing
-* Statistical modeling
-* Feature engineering
-* Machine-learning training
-* Machine-learning inference pipelines
-* Large numerical computations
+- pandas-based data processing
+- Statistical modeling
+- Feature engineering
+- Machine-learning training
+- Machine-learning inference pipelines
+- Large numerical computations
 
 Those responsibilities belong to the Analysis Service.
 
@@ -260,16 +260,16 @@ Those responsibilities belong to the Analysis Service.
 
 ### Technology
 
-* Python
-* FastAPI
-* Pydantic
-* pandas
-* Polars
-* NumPy
-* SciPy
-* scikit-learn
-* XGBoost
-* LightGBM
+- Python
+- FastAPI
+- Pydantic
+- pandas
+- Polars
+- NumPy
+- SciPy
+- scikit-learn
+- XGBoost
+- LightGBM
 
 ### Location
 
@@ -285,18 +285,18 @@ A future rename can be considered, but it is not required during Day 2.
 
 The Analysis Service is responsible for:
 
-* Statistical analysis
-* Probability calculations
-* Dataset profiling
-* Data cleaning
-* Feature engineering
-* Model inference
-* Model training workflows
-* Model evaluation
-* Confidence estimation
-* Forecast generation
-* Domain-specific prediction logic
-* Returning structured analytical results
+- Statistical analysis
+- Probability calculations
+- Dataset profiling
+- Data cleaning
+- Feature engineering
+- Model inference
+- Model training workflows
+- Model evaluation
+- Confidence estimation
+- Forecast generation
+- Domain-specific prediction logic
+- Returning structured analytical results
 
 ### Example analytical tasks
 
@@ -322,13 +322,13 @@ Estimate the probability that inflation exceeds a given threshold.
 
 The Analysis Service must not be directly responsible for:
 
-* Browser authentication
-* User-session management
-* Frontend presentation
-* Subscription billing
-* User-interface state
-* General application authorization
-* Public file-upload endpoints without API mediation
+- Browser authentication
+- User-session management
+- Frontend presentation
+- Subscription billing
+- User-interface state
+- General application authorization
+- Public file-upload endpoints without API mediation
 
 ---
 
@@ -342,21 +342,21 @@ PostgreSQL is the system of record for durable relational data.
 
 PostgreSQL will eventually store:
 
-* Users
-* Accounts
-* Roles
-* Sessions
-* Analysis requests
-* Analysis results
-* Forecast records
-* Data-source metadata
-* Uploaded-file metadata
-* Model metadata
-* Model versions
-* Audit events
-* User preferences
-* Portfolio records
-* Domain configurations
+- Users
+- Accounts
+- Roles
+- Sessions
+- Analysis requests
+- Analysis results
+- Forecast records
+- Data-source metadata
+- Uploaded-file metadata
+- Model metadata
+- Model versions
+- Audit events
+- User preferences
+- Portfolio records
+- Domain configurations
 
 ### Example future entities
 
@@ -392,16 +392,16 @@ Redis provides fast, temporary, and expiring storage.
 
 Redis may eventually support:
 
-* Request caching
-* Analysis-result caching
-* Rate-limiting counters
-* Temporary workflow state
-* Short-lived access tokens
-* Distributed locks
-* Idempotency keys
-* Job-status tracking
-* Frequently requested market-data caching
-* Frequently requested sports-data caching
+- Request caching
+- Analysis-result caching
+- Rate-limiting counters
+- Temporary workflow state
+- Short-lived access tokens
+- Distributed locks
+- Idempotency keys
+- Job-status tracking
+- Frequently requested market-data caching
+- Frequently requested sports-data caching
 
 ### Redis is not the system of record
 
@@ -421,30 +421,30 @@ Object storage stores large files and binary artifacts that should not be placed
 
 Development:
 
-* MinIO
-* Local S3-compatible storage
+- MinIO
+- Local S3-compatible storage
 
 Production:
 
-* Amazon S3
-* Cloudflare R2
-* Google Cloud Storage
-* Azure Blob Storage
-* Another S3-compatible provider
+- Amazon S3
+- Cloudflare R2
+- Google Cloud Storage
+- Azure Blob Storage
+- Another S3-compatible provider
 
 ### Responsibilities
 
 Object storage may contain:
 
-* Uploaded CSV files
-* Uploaded Excel files
-* Uploaded JSON files
-* Generated reports
-* Model artifacts
-* Serialized preprocessing pipelines
-* Charts and exports
-* Archived datasets
-* Large analytical outputs
+- Uploaded CSV files
+- Uploaded Excel files
+- Uploaded JSON files
+- Generated reports
+- Model artifacts
+- Serialized preprocessing pipelines
+- Charts and exports
+- Archived datasets
+- Large analytical outputs
 
 ### Database relationship
 
@@ -477,16 +477,16 @@ Object storage:
 
 Initial communication:
 
-* HTTPS
-* REST
-* JSON
-* Multipart form data for file uploads
+- HTTPS
+- REST
+- JSON
+- Multipart form data for file uploads
 
 Possible future communication:
 
-* GraphQL for selected query-heavy interfaces
-* Server-Sent Events for streamed analysis progress
-* WebSockets for live market or job updates
+- GraphQL for selected query-heavy interfaces
+- Server-Sent Events for streamed analysis progress
+- WebSockets for live market or job updates
 
 REST remains the initial default.
 
@@ -496,16 +496,16 @@ REST remains the initial default.
 
 Initial communication:
 
-* HTTP
-* REST
-* JSON
-* Internal authentication
-* Explicit request and response schemas
+- HTTP
+- REST
+- JSON
+- Internal authentication
+- Explicit request and response schemas
 
 Possible future communication:
 
-* gRPC for high-volume or strongly typed internal calls
-* Asynchronous job processing for long-running analyses
+- gRPC for high-volume or strongly typed internal calls
+- Asynchronous job processing for long-running analyses
 
 Direct HTTP communication is sufficient during the initial development phase.
 
@@ -594,17 +594,17 @@ A monorepo does not mean all components must run in one process or one container
 
 The initial architecture establishes the following security rules:
 
-* The browser communicates with the Core API.
-* The Analysis Service is treated as an internal service.
-* Database credentials are never exposed to the browser.
-* Redis credentials are never exposed to the browser.
-* Object-storage credentials are never exposed to the browser.
-* Provider API keys are stored on the server.
-* All external inputs must be validated.
-* Uploaded files must be checked for type, size, and ownership.
-* Internal service calls must eventually be authenticated.
-* Sensitive data must not be written to application logs.
-* Analysis records must be associated with an authorized user.
+- The browser communicates with the Core API.
+- The Analysis Service is treated as an internal service.
+- Database credentials are never exposed to the browser.
+- Redis credentials are never exposed to the browser.
+- Object-storage credentials are never exposed to the browser.
+- Provider API keys are stored on the server.
+- All external inputs must be validated.
+- Uploaded files must be checked for type, size, and ownership.
+- Internal service calls must eventually be authenticated.
+- Sensitive data must not be written to application logs.
+- Analysis records must be associated with an authorized user.
 
 ---
 
@@ -612,15 +612,15 @@ The initial architecture establishes the following security rules:
 
 Each service should eventually implement:
 
-* Health endpoints
-* Structured logging
-* Request identifiers
-* Timeouts
-* Controlled retries
-* Input validation
-* Error normalization
-* Graceful shutdown
-* Environment validation
+- Health endpoints
+- Structured logging
+- Request identifiers
+- Timeouts
+- Controlled retries
+- Input validation
+- Error normalization
+- Graceful shutdown
+- Environment validation
 
 Example health endpoints:
 
@@ -641,11 +641,11 @@ Kafka will not be added during the initial foundation phase.
 
 Current service communication does not require:
 
-* Large event streams
-* Multiple event consumers
-* Event replay
-* High-throughput ingestion
-* Complex event-driven workflows
+- Large event streams
+- Multiple event consumers
+- Event replay
+- High-throughput ingestion
+- Complex event-driven workflows
 
 Kafka may be evaluated later when real requirements emerge.
 
@@ -655,19 +655,19 @@ Kubernetes will not be added during the initial foundation phase.
 
 The current platform does not yet require:
 
-* Large clusters
-* Automated multi-node orchestration
-* Complex horizontal scaling
-* Advanced service-mesh capabilities
-* Multi-region workload scheduling
+- Large clusters
+- Automated multi-node orchestration
+- Complex horizontal scaling
+- Advanced service-mesh capabilities
+- Multi-region workload scheduling
 
 Initial deployments should use simpler infrastructure such as:
 
-* Docker Compose for local development
-* Managed application platforms
-* Managed PostgreSQL
-* Managed Redis
-* Managed object storage
+- Docker Compose for local development
+- Managed application platforms
+- Managed PostgreSQL
+- Managed Redis
+- Managed object storage
 
 Kubernetes may be evaluated after the platform has measurable scaling and operational requirements.
 

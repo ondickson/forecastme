@@ -7,7 +7,6 @@ from app.schemas.analysis import (
     PredictionResult,
 )
 
-
 app = FastAPI(
     title="ForecastMe Prediction Service",
     version="0.1.0",
@@ -27,7 +26,6 @@ def health() -> dict[str, str]:
     return {"status": "healthy"}
 
 
-
 @app.post(
     "/internal/v1/analyses",
     response_model=AnalysisServiceResponse,
@@ -44,9 +42,7 @@ async def create_analysis(
             confidence=0.5,
             recommendation="Continue implementing the analysis pipeline.",
         ),
-        summary=(
-            "The request passed the shared ForecastMe analysis contract."
-        ),
+        summary=("The request passed the shared ForecastMe analysis contract."),
         assumptions=[
             "This is a temporary contract-testing response.",
         ],

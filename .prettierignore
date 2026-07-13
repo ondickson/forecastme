@@ -1,0 +1,11 @@
+node_modules
+.pnpm-store
+.next
+dist
+coverage
+.turbo
+.venv
+__pycache__
+*.pyc
+pnpm-lock.yaml
+services/prediction-service

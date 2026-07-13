@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
 
-class AnalysisDomain(str, Enum):
+class AnalysisDomain(StrEnum):
     SPORTS = "sports"
     BETTING = "betting"
     STOCKS = "stocks"
@@ -16,7 +16,7 @@ class AnalysisDomain(str, Enum):
     CUSTOM = "custom"
 
 
-class AnalysisStatus(str, Enum):
+class AnalysisStatus(StrEnum):
     PENDING = "pending"
     QUEUED = "queued"
     PROCESSING = "processing"

@@ -1,10 +1,10 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
-class ApiErrorCode(str, Enum):
+class ApiErrorCode(StrEnum):
     VALIDATION_ERROR = "VALIDATION_ERROR"
     UNAUTHORIZED = "UNAUTHORIZED"
     FORBIDDEN = "FORBIDDEN"

@@ -1,0 +1,51 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+exclude = [
+    ".venv",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "UP",
+]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+pretty = true
+show_error_codes = true
+warn_unused_configs = true
+exclude = [
+    "^\\.venv/",
+    "^tests/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "fastapi.*",
+    "pydantic.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
