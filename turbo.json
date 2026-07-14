@@ -10,11 +10,11 @@
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^lint"],
+      "dependsOn": ["^build", "^lint"],
       "outputs": []
     },
     "lint:fix": {
-      "dependsOn": ["^lint:fix"],
+      "dependsOn": ["^build", "^lint:fix"],
       "cache": false,
       "outputs": []
     },
@@ -26,7 +26,7 @@
       "outputs": []
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"],
+      "dependsOn": ["^build", "^typecheck"],
       "outputs": []
     },
     "test": {
