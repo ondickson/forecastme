@@ -9,6 +9,8 @@ import {
 import type { Request, Response } from 'express';
 import type { RequestWithId } from '../middleware/request-id.middleware';
 
+const INTERNAL_SERVER_ERROR_STATUS = 500;
+
 interface NestErrorResponse {
   error?: string;
   message?: string | string[];
@@ -36,7 +38,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const statusCode =
       exception instanceof HttpException
         ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+        : INTERNAL_SERVER_ERROR_STATUS;
 
     const exceptionResponse =
       exception instanceof HttpException ? exception.getResponse() : null;
@@ -53,7 +55,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
     };
 
-    if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (statusCode >= INTERNAL_SERVER_ERROR_STATUS) {
       this.logger.error(
         `${request.method} ${request.originalUrl}`,
         exception instanceof Error ? exception.stack : String(exception),
@@ -94,7 +96,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 
   private defaultError(statusCode: number): string {
-    if (statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (statusCode === INTERNAL_SERVER_ERROR_STATUS) {
       return 'Internal Server Error';
     }
 
@@ -102,7 +104,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 
   private defaultMessage(statusCode: number): string {
-    if (statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (statusCode === INTERNAL_SERVER_ERROR_STATUS) {
       return 'An unexpected error occurred.';
     }
 
