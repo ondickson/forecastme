@@ -1,0 +1,85 @@
+name: Feature request
+description: Propose an improvement or new capability for ForecastMe
+title: "[Feature]: "
+labels:
+  - enhancement
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the user problem first, then propose the solution.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or system problem should this feature solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the expected behavior and implementation direction.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Product area
+      options:
+        - General research
+        - Uploaded datasets
+        - Sports analysis
+        - Financial-market analysis
+        - Authentication
+        - Analysis history
+        - Infrastructure
+        - Developer experience
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe alternative solutions or workarounds.
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: State the testable conditions required for completion.
+      placeholder: |
+        - [ ] Criterion one
+        - [ ] Criterion two
+        - [ ] Criterion three
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Suggested priority
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I searched existing issues before submitting this request.
+          required: true
+        - label: This request aligns with the current ForecastMe product scope.
+          required: true
