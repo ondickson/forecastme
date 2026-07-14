@@ -1,9 +1,8 @@
 name: Feature request
 description: Propose an improvement or new capability for ForecastMe
-title: "[Feature]: "
+title: '[Feature]: '
 labels:
   - enhancement
-assignees: []
 
 body:
   - type: markdown

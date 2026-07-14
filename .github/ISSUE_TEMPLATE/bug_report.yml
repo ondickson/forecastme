@@ -1,9 +1,8 @@
 name: Bug report
 description: Report a reproducible problem in ForecastMe
-title: "[Bug]: "
+title: '[Bug]: '
 labels:
   - bug
-assignees: []
 
 body:
   - type: markdown
