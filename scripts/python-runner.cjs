@@ -1,39 +1,25 @@
-const { existsSync } = require("node:fs");
-const { spawnSync } = require("node:child_process");
-const path = require("node:path");
+const { existsSync } = require('node:fs');
+const { spawnSync } = require('node:child_process');
+const path = require('node:path');
 
-const projectRoot = path.resolve(__dirname, "..");
+const projectRoot = path.resolve(__dirname, '..');
 
 const virtualEnvironmentPython =
-  process.platform === "win32"
-    ? path.join(
-        projectRoot,
-        "services",
-        "prediction-service",
-        ".venv",
-        "Scripts",
-        "python.exe",
-      )
-    : path.join(
-        projectRoot,
-        "services",
-        "prediction-service",
-        ".venv",
-        "bin",
-        "python",
-      );
+  process.platform === 'win32'
+    ? path.join(projectRoot, 'services', 'prediction-service', '.venv', 'Scripts', 'python.exe')
+    : path.join(projectRoot, 'services', 'prediction-service', '.venv', 'bin', 'python');
 
 const pythonExecutable =
   process.env.PYTHON ||
   (existsSync(virtualEnvironmentPython)
     ? virtualEnvironmentPython
-    : process.platform === "win32"
-      ? "python"
-      : "python3");
+    : process.platform === 'win32'
+      ? 'python'
+      : 'python3');
 
 const result = spawnSync(pythonExecutable, process.argv.slice(2), {
   cwd: projectRoot,
-  stdio: "inherit",
+  stdio: 'inherit',
   shell: false,
 });
 
