@@ -1,0 +1,28 @@
+# Day 8 progress
+
+- UsersService created
+- AuthService created
+- Registration DTOs
+- Login DTOs
+- Password hashing implemented
+- JWT configuration added
+- Access token generation
+- Refresh token generation
+- Refresh token hashing
+- Session persistence
+- Register endpoint
+- Login endpoint
+- Refresh endpoint
+- Logout endpoint
+- Current-user endpoint
+- JWT strategy
+- JWT auth guard
+- Current-user decorator
+- Protected route verification
+- Authentication tests
+- Format passes
+- Lint passes
+- Typecheck passes
+- Tests pass
+- Build passes
+- Working authentication API
