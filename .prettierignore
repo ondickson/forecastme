@@ -8,4 +8,10 @@ coverage
 __pycache__
 *.pyc
 pnpm-lock.yaml
-services/prediction-service
+services/prediction-service/web/next-env.d.ts
+
+# Python
+services/prediction-service/**
+**/.pytest_cache/**
+**/__pycache__/**
+**/*.pyc
