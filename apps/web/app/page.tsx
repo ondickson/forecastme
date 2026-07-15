@@ -1,11 +1,8 @@
-
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-16 text-slate-950">
       <div className="mx-auto max-w-5xl">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">
-          ForecastMe
-        </p>
+        <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">ForecastMe</p>
 
         <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
           Design system foundation

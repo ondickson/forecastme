@@ -88,8 +88,8 @@ export default function DesignSystemPage() {
                   Body
                 </p>
                 <p className="mt-2 max-w-3xl leading-7 text-muted-foreground">
-                  ForecastMe separates calculated outputs from AI-assisted explanations so users
-                  can distinguish model evidence, uncertainty, and interpretation.
+                  ForecastMe separates calculated outputs from AI-assisted explanations so users can
+                  distinguish model evidence, uncertainty, and interpretation.
                 </p>
               </div>
 
@@ -177,12 +177,7 @@ export default function DesignSystemPage() {
 
               <div className="grid gap-2">
                 <Label htmlFor="disabled-field">Unavailable field</Label>
-                <Input
-                  id="disabled-field"
-                  value="Enabled in a later workflow"
-                  disabled
-                  readOnly
-                />
+                <Input id="disabled-field" value="Enabled in a later workflow" disabled readOnly />
               </div>
             </CardContent>
 

@@ -1,36 +1,27 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
 
-
 --background
---foreground
-
---card
---card-foreground
-
---primary
---primary-foreground
-
---secondary
---secondary-foreground
-
---muted
---muted-foreground
-
---border
---input
---ring
-
---success
---warning
---destructive
-
-
-* {
+  --foreground
+  --card
+  --card-foreground
+  --primary
+  --primary-foreground
+  --secondary
+  --secondary-foreground
+  --muted
+  --muted-foreground
+  --border
+  --input
+  --ring
+  --success
+  --warning
+  --destructive
+  * {
   box-sizing: border-box;
 }
 
