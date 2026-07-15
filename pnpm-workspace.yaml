@@ -4,8 +4,8 @@ packages:
   - services/*
 
 allowBuilds:
-  "@prisma/engines": true
-  "@scarf/scarf": false
+  '@prisma/engines': true
+  '@scarf/scarf': false
   argon2: true
   prisma: true
   sharp: true
