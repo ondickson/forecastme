@@ -1,6 +1,7 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AnalysisDomain, AnalysisStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
+import { PythonService } from '../python/python.service';
 import { AnalysesService } from './analyses.service';
 import { CreateAnalysisDto } from './dto';
 
@@ -28,12 +29,21 @@ describe('AnalysesService', () => {
   const prisma = {
     analysisRequest: {
       create: jest.fn(),
+      update: jest.fn(),
       findUnique: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
       delete: jest.fn(),
     },
+    analysisResult: {
+      create: jest.fn(),
+    },
     $transaction: jest.fn(),
+  };
+
+  const pythonService = {
+    classify: jest.fn(),
+    analyze: jest.fn(),
   };
 
   beforeEach(() => {
@@ -43,17 +53,69 @@ describe('AnalysesService', () => {
       async (operations: Promise<unknown>[]) => Promise.all(operations),
     );
 
-    service = new AnalysesService(prisma as unknown as PrismaService);
+    service = new AnalysesService(
+      prisma as unknown as PrismaService,
+      pythonService as unknown as PythonService,
+    );
   });
 
   describe('create', () => {
-    it('creates an analysis belonging to the authenticated user', async () => {
+    it('creates, processes, persists, and completes an analysis', async () => {
       const dto: CreateAnalysisDto = {
         prompt: 'Will England beat Argentina?',
         domain: AnalysisDomain.SPORTS,
       };
 
+      const completedAnalysis = {
+        ...analysisRequest,
+        domain: AnalysisDomain.SPORTS,
+        status: AnalysisStatus.COMPLETED,
+        startedAt: new Date('2026-07-15T00:01:00.000Z'),
+        completedAt: new Date('2026-07-15T00:02:00.000Z'),
+        result: {
+          id: 'result-1',
+          analysisRequestId: 'analysis-1',
+          summary: 'Analysis completed',
+          content: {},
+          probability: 0.65,
+          confidence: 0.8,
+          riskScore: null,
+          createdAt: new Date('2026-07-15T00:02:00.000Z'),
+          updatedAt: new Date('2026-07-15T00:02:00.000Z'),
+        },
+      };
+
       prisma.analysisRequest.create.mockResolvedValue(analysisRequest);
+      prisma.analysisRequest.update.mockResolvedValue(analysisRequest);
+      prisma.analysisResult.create.mockResolvedValue(completedAnalysis.result);
+      prisma.analysisRequest.findUnique.mockResolvedValue(completedAnalysis);
+
+      pythonService.classify.mockResolvedValue({
+        domain: AnalysisDomain.SPORTS,
+        confidence: 0.9,
+        reasoning: 'The prompt concerns a football match.',
+      });
+
+      pythonService.analyze.mockResolvedValue({
+        analysisId: 'analysis-1',
+        status: 'completed',
+        result: {
+          outcome: 'England win',
+          probability: 0.65,
+          confidence: 0.8,
+          recommendation: 'Moderate confidence only.',
+        },
+        summary: 'Analysis completed',
+        assumptions: [],
+        limitations: [],
+        sources: [],
+        processingTimeMs: 25,
+      });
+
+      prisma.$transaction.mockResolvedValue([
+        completedAnalysis.result,
+        completedAnalysis,
+      ]);
 
       const result = await service.create('user-1', dto);
 
@@ -69,7 +131,20 @@ describe('AnalysesService', () => {
         },
       });
 
-      expect(result).toEqual(analysisRequest);
+      expect(pythonService.classify).toHaveBeenCalledWith({
+        prompt: dto.prompt,
+      });
+
+      expect(pythonService.analyze).toHaveBeenCalledWith({
+        analysisId: 'analysis-1',
+        question: dto.prompt,
+        domain: 'sports',
+        options: undefined,
+        correlationId: 'analysis-1',
+      });
+
+      expect(prisma.analysisResult.create).toHaveBeenCalled();
+      expect(result).toEqual(completedAnalysis);
     });
   });
 

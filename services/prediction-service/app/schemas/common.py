@@ -24,7 +24,7 @@ class ErrorResponse(BaseModel):
     status_code: int = Field(alias="statusCode", ge=400, le=599)
     code: ApiErrorCode
     message: str = Field(min_length=1)
-    correlation_id: str | None = Field(default=None, alias="correlationId")
+    request_id: str | None = Field(default=None, alias="requestId")
     details: list[ValidationIssue] | None = None
     timestamp: datetime
 

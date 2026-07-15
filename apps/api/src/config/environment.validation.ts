@@ -1,4 +1,4 @@
-import { plainToInstance } from 'class-transformer';
+import { plainToInstance, Type } from 'class-transformer';
 import {
   IsInt,
   IsNotEmpty,
@@ -29,6 +29,11 @@ class EnvironmentVariables {
   @IsNotEmpty()
   JWT_REFRESH_EXPIRES_IN!: string;
 
+  @IsString()
+  @IsNotEmpty()
+  PREDICTION_SERVICE_URL!: string;
+
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(65535)

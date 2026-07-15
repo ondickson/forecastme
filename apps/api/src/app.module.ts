@@ -9,6 +9,7 @@ import { validateEnvironment } from './config/environment.validation';
 import { ConversationsModule } from './conversations/conversations.module';
 import { DatasetsModule } from './datasets/datasets.module';
 import { HealthModule } from './health/health.module';
+import { PythonModule } from './python/python.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     UsersModule,
     AnalysesModule,
+    PythonModule,
     ConversationsModule,
     DatasetsModule,
     HealthModule,
