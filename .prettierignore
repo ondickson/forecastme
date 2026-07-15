@@ -15,3 +15,5 @@ services/prediction-service/**
 **/.pytest_cache/**
 **/__pycache__/**
 **/*.pyc
+
+apps/web/next-env.d.ts
