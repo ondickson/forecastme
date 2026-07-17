@@ -11,8 +11,23 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import type {
+  AnalysisFormValues,
+  AnalysisRequestRecord,
+  AnalysisSubmissionStatus,
+} from '@/types/analysis';
 
-export function MobileAnalysisPanel() {
+interface MobileAnalysisPanelProps {
+  analysis: AnalysisRequestRecord | null;
+  submittedValues: AnalysisFormValues | null;
+  submissionStatus: AnalysisSubmissionStatus;
+}
+
+export function MobileAnalysisPanel({
+  analysis,
+  submittedValues,
+  submissionStatus,
+}: MobileAnalysisPanelProps) {
   return (
     <Sheet>
       <SheetTrigger
@@ -33,10 +48,14 @@ export function MobileAnalysisPanel() {
       <SheetContent side="right" className="w-[min(24rem,90vw)] gap-0 p-0" showCloseButton>
         <SheetTitle className="sr-only">Analysis details</SheetTitle>
         <SheetDescription className="sr-only">
-          View probability estimates, confidence scores, risk indicators, and supporting metadata.
+          View the submitted analysis request and its current status.
         </SheetDescription>
 
-        <AnalysisPanel />
+        <AnalysisPanel
+          analysis={analysis}
+          submittedValues={submittedValues}
+          submissionStatus={submissionStatus}
+        />
       </SheetContent>
     </Sheet>
   );

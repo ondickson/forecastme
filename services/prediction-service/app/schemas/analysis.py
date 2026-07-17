@@ -1,19 +1,14 @@
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class AnalysisDomain(StrEnum):
+    GENERAL_RESEARCH = "general_research"
+    CUSTOM_DATASET = "custom_dataset"
     SPORTS = "sports"
-    BETTING = "betting"
-    STOCKS = "stocks"
-    CRYPTO = "crypto"
-    ECONOMICS = "economics"
-    WEATHER = "weather"
-    RISK = "risk"
-    DATASET = "dataset"
-    CUSTOM = "custom"
+    FINANCIAL_MARKET = "financial_market"
 
 
 class AnalysisStatus(StrEnum):
@@ -160,7 +155,7 @@ class AnalysisServiceResponse(BaseModel):
     def completed_analysis_requires_result(
         cls,
         value: PredictionResult | None,
-        info,
+        info: ValidationInfo,
     ) -> PredictionResult | None:
         status = info.data.get("status")
 

@@ -50,28 +50,22 @@ export class AnalysesService {
           id: analysis.id,
         },
         data: {
-          status: AnalysisStatus.CLASSIFYING,
+          status: AnalysisStatus.COLLECTING_DATA,
           startedAt: new Date(),
           errorCode: null,
           errorMessage: null,
         },
       });
 
-      const classification = await this.pythonService.classify({
-        prompt: dto.prompt,
-      });
-
-      await this.updateStatus(analysis.id, AnalysisStatus.COLLECTING_DATA);
       await this.updateStatus(analysis.id, AnalysisStatus.ANALYZING);
 
       const pythonResponse = await this.pythonService.analyze({
         analysisId: analysis.id,
         question: dto.prompt,
-        domain: PYTHON_DOMAIN_MAP[classification.domain],
+        domain: PYTHON_DOMAIN_MAP[dto.domain],
         options: dto.parameters,
         correlationId: analysis.id,
       });
-
       await this.prisma.$transaction([
         this.prisma.analysisResult.create({
           data: {
@@ -88,7 +82,6 @@ export class AnalysesService {
             id: analysis.id,
           },
           data: {
-            domain: classification.domain,
             status: AnalysisStatus.COMPLETED,
             completedAt: new Date(),
             errorCode: null,

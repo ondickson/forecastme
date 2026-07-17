@@ -28,6 +28,7 @@ interface AuthenticationState {
   initialize: () => Promise<void>;
   login: (request: LoginRequest) => Promise<void>;
   register: (request: RegisterRequest) => Promise<void>;
+  refreshAccessToken: () => Promise<string>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -131,6 +132,32 @@ export const useAuthStore = create<AuthenticationState>((set) => ({
         error: error instanceof Error ? error.message : 'Unable to register. Please try again.',
       });
 
+      throw error;
+    }
+  },
+
+  refreshAccessToken: async () => {
+    const refreshToken = getStoredRefreshToken();
+
+    if (!refreshToken) {
+      set(clearSessionState());
+      throw new Error('Your session has expired. Please log in again.');
+    }
+
+    try {
+      const tokens = await refreshRequest({ refreshToken });
+
+      storeRefreshToken(tokens.refreshToken);
+
+      set({
+        accessToken: tokens.accessToken,
+        status: 'authenticated',
+        error: null,
+      });
+
+      return tokens.accessToken;
+    } catch (error) {
+      set(clearSessionState());
       throw error;
     }
   },

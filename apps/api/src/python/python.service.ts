@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   ServiceUnavailableException,
+  BadGatewayException,
 } from '@nestjs/common';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
@@ -114,15 +115,22 @@ export class PythonService {
     requestId?: string,
   ): never {
     if (error instanceof AxiosError) {
+      const status = error.response?.status;
       const responseData: unknown = error.response?.data;
 
       this.logger.error({
         message: `Python service ${operation} request failed`,
         requestId,
-        statusCode: error.response?.status,
+        statusCode: status,
         response: responseData,
         error: error.message,
       });
+
+      if (status !== undefined) {
+        throw new BadGatewayException(
+          'The analysis service failed to process the internal request',
+        );
+      }
     } else {
       this.logger.error({
         message: `Unexpected Python service ${operation} error`,

@@ -23,8 +23,6 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
         <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
           <BarChart3 className="size-4" aria-hidden="true" />
         </div>
-
-        <span className="font-semibold tracking-tight">ForecastMe</span>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">

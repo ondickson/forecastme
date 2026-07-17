@@ -1,3 +1,4 @@
+// components/auth/register-form.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -86,11 +87,11 @@ export function RegisterForm() {
   if (status === 'initializing') {
     return (
       <div
-        className="flex min-h-dvh items-center justify-center bg-background"
+        className="flex min-h-dvh items-center justify-center bg-white"
         role="status"
         aria-live="polite"
       >
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-slate-500">
           <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
           Checking your session...
         </div>
@@ -101,11 +102,11 @@ export function RegisterForm() {
   if (status === 'authenticated') {
     return (
       <div
-        className="flex min-h-dvh items-center justify-center bg-background"
+        className="flex min-h-dvh items-center justify-center bg-white"
         role="status"
         aria-live="polite"
       >
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-slate-500">
           <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
           Redirecting...
         </div>
@@ -114,17 +115,26 @@ export function RegisterForm() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center overflow-y-auto bg-muted/30 p-4 sm:p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Create your ForecastMe account</CardTitle>
-          <CardDescription>
-            Register to save analyses, datasets, and prediction history.
-          </CardDescription>
+    <main className="flex min-h-dvh items-center justify-center bg-white">
+      <Card className="w-full rounded-[2rem] border border-gray-200 bg-white shadow-lg shadow-slate-900/5">
+        <CardHeader className="space-y-3 border-b border-gray-200 bg-slate-50 px-8 py-8">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-indigo-700">
+              Create account
+            </p>
+          </div>
+          <div className="space-y-2">
+            <CardTitle className="text-3xl font-semibold tracking-tight text-slate-900">
+              Create your ForecastMe account
+            </CardTitle>
+            <CardDescription className="text-sm text-slate-500">
+              Join the next generation of predictive intelligence.
+            </CardDescription>
+          </div>
         </CardHeader>
 
-        <CardContent>
-          <form className="space-y-5" onSubmit={onSubmit} noValidate aria-busy={isSubmitting}>
+        <CardContent className="px-8 py-8">
+          <form className="space-y-6" onSubmit={onSubmit} noValidate aria-busy={isSubmitting}>
             {apiError ? (
               <Alert variant="destructive">
                 <AlertCircle aria-hidden="true" />
@@ -133,139 +143,152 @@ export function RegisterForm() {
               </Alert>
             ) : null}
 
-            <div className="space-y-2">
-              <Label htmlFor="displayName">Display name</Label>
-              <Input
-                id="displayName"
-                type="text"
-                autoComplete="name"
-                placeholder="Ati Owusu"
-                disabled={isSubmitting}
-                aria-invalid={Boolean(errors.displayName)}
-                aria-describedby={errors.displayName ? 'display-name-error' : undefined}
-                {...register('displayName', {
-                  onChange: clearError,
-                })}
-              />
-              {errors.displayName ? (
-                <p id="display-name-error" className="text-sm text-destructive" role="alert">
-                  {errors.displayName.message}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                disabled={isSubmitting}
-                aria-invalid={Boolean(errors.email)}
-                aria-describedby={errors.email ? 'email-error' : undefined}
-                {...register('email', {
-                  onChange: clearError,
-                })}
-              />
-              {errors.email ? (
-                <p id="email-error" className="text-sm text-destructive" role="alert">
-                  {errors.email.message}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-
-              <div className="relative">
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Full name</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
+                  id="displayName"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="John Doe"
                   disabled={isSubmitting}
-                  className="pr-10"
-                  aria-invalid={Boolean(errors.password)}
-                  aria-describedby={
-                    errors.password ? 'registration-password-error' : 'password-requirement'
-                  }
-                  {...register('password', {
+                  aria-invalid={Boolean(errors.displayName)}
+                  aria-describedby={errors.displayName ? 'display-name-error' : undefined}
+                  className="border-gray-300 bg-gray-50 text-slate-900 placeholder:text-slate-400"
+                  {...register('displayName', {
                     onChange: clearError,
                   })}
                 />
-
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  disabled={isSubmitting}
-                >
-                  {showPassword ? (
-                    <EyeOff className="size-4" aria-hidden="true" />
-                  ) : (
-                    <Eye className="size-4" aria-hidden="true" />
-                  )}
-                </button>
+                {errors.displayName ? (
+                  <p id="display-name-error" className="text-sm text-destructive" role="alert">
+                    {errors.displayName.message}
+                  </p>
+                ) : null}
               </div>
 
-              {errors.password ? (
-                <p
-                  id="registration-password-error"
-                  className="text-sm text-destructive"
-                  role="alert"
-                >
-                  {errors.password.message}
-                </p>
-              ) : (
-                <p id="password-requirement" className="text-xs text-muted-foreground">
-                  Use at least 12 characters.
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm password</Label>
-
-              <div className="relative">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email address</Label>
                 <Input
-                  id="confirmPassword"
-                  type={showConfirmation ? 'text' : 'password'}
-                  autoComplete="new-password"
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="name@company.com"
                   disabled={isSubmitting}
-                  className="pr-10"
-                  aria-invalid={Boolean(errors.confirmPassword)}
-                  aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
-                  {...register('confirmPassword', {
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  className="border-gray-300 bg-gray-50 text-slate-900 placeholder:text-slate-400"
+                  {...register('email', {
                     onChange: clearError,
                   })}
                 />
-
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                  onClick={() => setShowConfirmation((visible) => !visible)}
-                  aria-label={
-                    showConfirmation ? 'Hide password confirmation' : 'Show password confirmation'
-                  }
-                  disabled={isSubmitting}
-                >
-                  {showConfirmation ? (
-                    <EyeOff className="size-4" aria-hidden="true" />
-                  ) : (
-                    <Eye className="size-4" aria-hidden="true" />
-                  )}
-                </button>
+                {errors.email ? (
+                  <p id="email-error" className="text-sm text-destructive" role="alert">
+                    {errors.email.message}
+                  </p>
+                ) : null}
               </div>
 
-              {errors.confirmPassword ? (
-                <p id="confirm-password-error" className="text-sm text-destructive" role="alert">
-                  {errors.confirmPassword.message}
-                </p>
-              ) : null}
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      disabled={isSubmitting}
+                      className="pr-10 border-gray-300 bg-gray-50 text-slate-900 placeholder:text-slate-400"
+                      aria-invalid={Boolean(errors.password)}
+                      aria-describedby={
+                        errors.password ? 'registration-password-error' : 'password-requirement'
+                      }
+                      {...register('password', {
+                        onChange: clearError,
+                      })}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+                      onClick={() => setShowPassword((visible) => !visible)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      disabled={isSubmitting}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-4" aria-hidden="true" />
+                      ) : (
+                        <Eye className="size-4" aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.password ? (
+                    <p
+                      id="registration-password-error"
+                      className="text-sm text-destructive"
+                      role="alert"
+                    >
+                      {errors.password.message}
+                    </p>
+                  ) : (
+                    <p id="password-requirement" className="text-xs text-slate-500">
+                      Use at least 12 characters.
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmation ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      disabled={isSubmitting}
+                      className="pr-10 border-gray-300 bg-gray-50 text-slate-900 placeholder:text-slate-400"
+                      aria-invalid={Boolean(errors.confirmPassword)}
+                      aria-describedby={
+                        errors.confirmPassword ? 'confirm-password-error' : undefined
+                      }
+                      {...register('confirmPassword', {
+                        onChange: clearError,
+                      })}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+                      onClick={() => setShowConfirmation((visible) => !visible)}
+                      aria-label={
+                        showConfirmation
+                          ? 'Hide password confirmation'
+                          : 'Show password confirmation'
+                      }
+                      disabled={isSubmitting}
+                    >
+                      {showConfirmation ? (
+                        <EyeOff className="size-4" aria-hidden="true" />
+                      ) : (
+                        <Eye className="size-4" aria-hidden="true" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.confirmPassword ? (
+                    <p
+                      id="confirm-password-error"
+                      className="text-sm text-destructive"
+                      role="alert"
+                    >
+                      {errors.confirmPassword.message}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full bg-indigo-700 text-white hover:bg-indigo-600"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <>
                   <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
@@ -276,11 +299,11 @@ export function RegisterForm() {
               )}
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-sm text-slate-500">
               Already have an account?{' '}
               <Link
                 href={loginHref}
-                className="font-medium text-foreground underline-offset-4 hover:underline"
+                className="font-medium text-indigo-700 underline-offset-4 hover:underline"
               >
                 Sign in
               </Link>

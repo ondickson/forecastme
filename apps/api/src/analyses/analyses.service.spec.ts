@@ -15,7 +15,6 @@ describe('AnalysesService', () => {
     datasetId: null,
     modelVersionId: null,
     prompt: 'Will England beat Argentina?',
-    domain: AnalysisDomain.SPORTS,
     status: AnalysisStatus.PENDING,
     parameters: null,
     errorCode: null,
@@ -62,13 +61,18 @@ describe('AnalysesService', () => {
   describe('create', () => {
     it('creates, processes, persists, and completes an analysis', async () => {
       const dto: CreateAnalysisDto = {
-        prompt: 'Will England beat Argentina?',
-        domain: AnalysisDomain.SPORTS,
+        prompt: 'Will interest rates fall?',
+        domain: AnalysisDomain.FINANCIAL_MARKET,
+      };
+
+      const createdAnalysis = {
+        ...analysisRequest,
+        prompt: dto.prompt,
+        domain: dto.domain,
       };
 
       const completedAnalysis = {
         ...analysisRequest,
-        domain: AnalysisDomain.SPORTS,
         status: AnalysisStatus.COMPLETED,
         startedAt: new Date('2026-07-15T00:01:00.000Z'),
         completedAt: new Date('2026-07-15T00:02:00.000Z'),
@@ -85,16 +89,10 @@ describe('AnalysesService', () => {
         },
       };
 
-      prisma.analysisRequest.create.mockResolvedValue(analysisRequest);
+      prisma.analysisRequest.create.mockResolvedValue(createdAnalysis);
       prisma.analysisRequest.update.mockResolvedValue(analysisRequest);
       prisma.analysisResult.create.mockResolvedValue(completedAnalysis.result);
       prisma.analysisRequest.findUnique.mockResolvedValue(completedAnalysis);
-
-      pythonService.classify.mockResolvedValue({
-        domain: AnalysisDomain.SPORTS,
-        confidence: 0.9,
-        reasoning: 'The prompt concerns a football match.',
-      });
 
       pythonService.analyze.mockResolvedValue({
         analysisId: 'analysis-1',
@@ -131,14 +129,12 @@ describe('AnalysesService', () => {
         },
       });
 
-      expect(pythonService.classify).toHaveBeenCalledWith({
-        prompt: dto.prompt,
-      });
+      expect(pythonService.classify).not.toHaveBeenCalled();
 
       expect(pythonService.analyze).toHaveBeenCalledWith({
         analysisId: 'analysis-1',
         question: dto.prompt,
-        domain: 'sports',
+        domain: 'financial_market',
         options: undefined,
         correlationId: 'analysis-1',
       });
