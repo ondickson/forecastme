@@ -1,5 +1,10 @@
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import { AppShell } from '@/components/app-shell/app-shell';
 
 export default function Home() {
-  return <AppShell />;
+  return (
+    <ProtectedRoute>
+      <AppShell />
+    </ProtectedRoute>
+  );
 }
