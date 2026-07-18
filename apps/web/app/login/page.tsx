@@ -50,8 +50,8 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <aside className="hidden flex-1 flex-col justify-center bg-indigo-700 px-8 py-16 text-white lg:flex">
-          <div className="max-w-xl">
+        <aside className="hidden flex-1 flex-col items-center justify-center bg-indigo-700 px-8 py-16 text-white lg:flex">
+          <div className="w-full max-w-xl">
             <h2 className="text-5xl font-bold leading-tight tracking-tight">
               Predictive Intelligence for Modern Enterprise.
             </h2>
