@@ -1,4 +1,4 @@
-import { Brain, Database, History, Settings, SquarePen } from 'lucide-react';
+import { Brain, Database, History, SquarePen } from 'lucide-react';
 
 export const navigationItems = [
   {
@@ -20,10 +20,5 @@ export const navigationItems = [
     title: 'Models',
     href: '/models',
     icon: Brain,
-  },
-  {
-    title: 'Settings',
-    href: '/settings',
-    icon: Settings,
   },
 ];

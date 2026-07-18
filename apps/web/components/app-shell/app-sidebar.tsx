@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BarChart3, Sparkles } from 'lucide-react';
-
+import { AccountMenu } from '@/components/app-shell/account-menu';
 import { navigationItems } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/auth-store';
+
 
 interface AppSidebarProps {
   onNavigate?: () => void;
@@ -13,6 +15,10 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
+  const user = useAuthStore((state) => state.user);
+
+  const displayName = user?.displayName?.trim() || 'ForecastMe user';
+  const email = user?.email || 'No email available';
 
   return (
     <aside
@@ -86,6 +92,26 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
           <p className="mt-2 text-xs leading-5 text-indigo-900/70">
             Research, datasets, sports, and markets in one workspace.
           </p>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border bg-background px-3 py-2.5">
+          <div className="min-w-0">
+            <p
+              className="truncate text-sm font-semibold text-foreground"
+              title={displayName}
+            >
+              {displayName}
+            </p>
+
+            <p
+              className="truncate text-xs text-muted-foreground"
+              title={email}
+            >
+              {email}
+            </p>
+          </div>
+
+          <AccountMenu />
         </div>
       </div>
     </aside>

@@ -20,13 +20,23 @@ export function MobileNavigation() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <Button type="button" variant="ghost" size="icon" aria-label="Open navigation menu" />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="border-border bg-background shadow-sm"
+            aria-label="Open navigation menu"
+          />
         }
       >
-        <MenuIcon className="size-4" aria-hidden="true" />
+        <MenuIcon className="size-5" aria-hidden="true" />
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-72 gap-0 p-0 sm:max-w-72" showCloseButton={false}>
+      <SheetContent
+        side="left"
+        className="w-[17rem] gap-0 border-r p-0 sm:max-w-[17rem]"
+        showCloseButton={false}
+      >
         <SheetTitle className="sr-only">ForecastMe navigation</SheetTitle>
         <SheetDescription className="sr-only">
           Navigate between ForecastMe application sections.
