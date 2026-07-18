@@ -8,7 +8,6 @@ import { navigationItems } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 
-
 interface AppSidebarProps {
   onNavigate?: () => void;
 }
@@ -96,17 +95,11 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
 
         <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border bg-background px-3 py-2.5">
           <div className="min-w-0">
-            <p
-              className="truncate text-sm font-semibold text-foreground"
-              title={displayName}
-            >
+            <p className="truncate text-sm font-semibold text-foreground" title={displayName}>
               {displayName}
             </p>
 
-            <p
-              className="truncate text-xs text-muted-foreground"
-              title={email}
-            >
+            <p className="truncate text-xs text-muted-foreground" title={email}>
               {email}
             </p>
           </div>

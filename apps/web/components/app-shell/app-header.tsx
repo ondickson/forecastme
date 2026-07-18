@@ -12,11 +12,7 @@ interface AppHeaderProps {
   submissionStatus: AnalysisSubmissionStatus;
 }
 
-export function AppHeader({
-  analysis,
-  submittedValues,
-  submissionStatus,
-}: AppHeaderProps) {
+export function AppHeader({ analysis, submittedValues, submissionStatus }: AppHeaderProps) {
   return (
     <header className="flex h-16 shrink-0 items-center border-b bg-background px-4 md:hidden">
       <div className="flex w-full items-center justify-between gap-3">
@@ -25,9 +21,7 @@ export function AppHeader({
 
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">ForecastMe</p>
-            <p className="truncate text-xs text-muted-foreground">
-              Analysis workspace
-            </p>
+            <p className="truncate text-xs text-muted-foreground">Analysis workspace</p>
           </div>
         </div>
 
