@@ -1,8 +1,65 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 
 client = TestClient(app)
+
+
+@pytest.mark.parametrize(
+    "domain",
+    [
+        "general_research",
+        "custom_dataset",
+        "sports",
+        "financial_market",
+    ],
+)
+def test_create_analysis_accepts_current_domains(domain: str) -> None:
+    response = client.post(
+        "/internal/v1/analyses",
+        json={
+            "analysisId": f"analysis_{domain}",
+            "question": "Provide a valid analysis for this request.",
+            "domain": domain,
+            "correlationId": f"correlation_{domain}",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "completed"
+
+
+@pytest.mark.parametrize(
+    "domain",
+    [
+        "betting",
+        "stocks",
+        "crypto",
+        "economics",
+        "weather",
+        "risk",
+        "dataset",
+        "custom",
+    ],
+)
+def test_create_analysis_rejects_legacy_domains(domain: str) -> None:
+    response = client.post(
+        "/internal/v1/analyses",
+        json={
+            "analysisId": f"analysis_{domain}",
+            "question": "Provide a valid analysis for this request.",
+            "domain": domain,
+            "correlationId": f"correlation_{domain}",
+        },
+    )
+
+    assert response.status_code == 422
+
+    body = response.json()
+
+    assert body["code"] == "VALIDATION_ERROR"
+    assert any(detail["field"] == "body.domain" for detail in body["details"])
 
 
 def test_root_endpoint() -> None:
