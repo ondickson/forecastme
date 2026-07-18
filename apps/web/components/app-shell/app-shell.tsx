@@ -4,7 +4,6 @@ import { useState } from 'react';
 
 import { AnalysisPanel } from '@/components/app-shell/analysis-panel';
 import { AppHeader } from '@/components/app-shell/app-header';
-import { AppSidebar } from '@/components/app-shell/app-sidebar';
 import { ConversationWorkspace } from '@/components/app-shell/conversation-workspace';
 import { createAnalysis } from '@/services/analysis-service';
 import type {
@@ -91,40 +90,32 @@ export function AppShell() {
     setSubmissionStatus((currentStatus) => (currentStatus === 'failed' ? 'idle' : currentStatus));
   }
   return (
-    <div className="h-dvh overflow-hidden bg-muted/30 text-foreground">
-      <div className="grid h-full grid-cols-1 md:grid-cols-[17rem_minmax(0,1fr)]">
-        <div className="hidden min-h-0 md:block">
-          <AppSidebar />
-        </div>
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
+      <AppHeader
+        analysis={analysis}
+        submittedValues={submittedValues}
+        submissionStatus={submissionStatus}
+      />
 
-        <div className="flex min-h-0 min-w-0 flex-col">
-          <AppHeader
-            analysis={analysis}
-            submittedValues={submittedValues}
-            submissionStatus={submissionStatus}
+      <main className="min-h-0 min-w-0 flex-1">
+        <div className="grid h-full min-h-0 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_23rem]">
+          <ConversationWorkspace
+            isSubmitting={isSubmitting}
+            apiError={apiError}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            onClearApiError={handleClearApiError}
           />
 
-          <main className="min-h-0 min-w-0 flex-1">
-            <div className="grid h-full min-h-0 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_23rem]">
-              <ConversationWorkspace
-                isSubmitting={isSubmitting}
-                apiError={apiError}
-                onSubmit={handleSubmit}
-                onCancel={handleCancel}
-                onClearApiError={handleClearApiError}
-              />
-
-              <div className="hidden min-h-0 border-l bg-background xl:block">
-                <AnalysisPanel
-                  analysis={analysis}
-                  submittedValues={submittedValues}
-                  submissionStatus={submissionStatus}
-                />
-              </div>
-            </div>
-          </main>
+          <div className="hidden min-h-0 border-l bg-background xl:block">
+            <AnalysisPanel
+              analysis={analysis}
+              submittedValues={submittedValues}
+              submissionStatus={submissionStatus}
+            />
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

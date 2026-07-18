@@ -1,24 +1,55 @@
-import { Brain, Database, History, SquarePen } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Brain, Database, Files, SquarePen } from 'lucide-react';
 
-export const navigationItems = [
+export interface NavigationItem {
+  title: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+export interface NavigationSection {
+  title: string;
+  items: NavigationItem[];
+}
+
+export const navigationSections: NavigationSection[] = [
   {
-    title: 'New Analysis',
-    href: '/',
-    icon: SquarePen,
+    title: 'Workspace',
+    items: [
+      {
+        title: 'New Analysis',
+        href: '/',
+        icon: SquarePen,
+      },
+      {
+        title: 'Analyses',
+        href: '/history',
+        icon: Files,
+      },
+    ],
   },
   {
-    title: 'History',
-    href: '/history',
-    icon: History,
+    title: 'Data',
+    items: [
+      {
+        title: 'Datasets',
+        href: '/datasets',
+        icon: Database,
+      },
+    ],
   },
   {
-    title: 'Datasets',
-    href: '/datasets',
-    icon: Database,
-  },
-  {
-    title: 'Models',
-    href: '/models',
-    icon: Brain,
+    title: 'Intelligence',
+    items: [
+      {
+        title: 'Models',
+        href: '/models',
+        icon: Brain,
+      },
+    ],
   },
 ];
+
+export const navigationItems: NavigationItem[] = navigationSections.flatMap(
+  (section) => section.items,
+);

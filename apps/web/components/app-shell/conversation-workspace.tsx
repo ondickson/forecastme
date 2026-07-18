@@ -38,9 +38,9 @@ export function ConversationWorkspace({
             </div>
           </div>
 
-          <span className="hidden rounded-full border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground sm:inline-flex">
+          {/* <span className="hidden rounded-full border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground sm:inline-flex">
             New request
-          </span>
+          </span> */}
         </div>
       </div>
 
