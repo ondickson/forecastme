@@ -45,12 +45,12 @@ export default function LoginPage() {
     <Suspense fallback={<LoginFallback />}>
       <main className="min-h-dvh flex flex-col bg-white lg:min-h-screen lg:flex-row">
         <div className="flex flex-1 items-center justify-center bg-white px-6 py-16">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-lg">
             <LoginForm />
           </div>
         </div>
 
-        <aside className="hidden flex-1 flex-col items-center justify-center bg-indigo-700 px-8 py-16 text-white lg:flex">
+        <aside className="hidden flex-1 bg-indigo-800 px-8 py-12 text-white lg:grid lg:min-h-dvh lg:place-items-center">
           <div className="w-full max-w-xl">
             <h2 className="text-5xl font-bold leading-tight tracking-tight">
               Predictive Intelligence for Modern Enterprise.

@@ -119,15 +119,15 @@ export function RegisterForm() {
       <Card className="w-full rounded-[2rem] border border-gray-200 bg-white shadow-lg shadow-slate-900/5">
         <CardHeader className="space-y-3 border-b border-gray-200 bg-slate-50 px-8 py-8">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-indigo-700">
+            <p className="text-base font-semibold uppercase tracking-[0.35em] text-indigo-700">
               Create account
             </p>
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-3xl font-semibold tracking-tight text-slate-900">
+            <CardTitle className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
               Create your ForecastMe account
             </CardTitle>
-            <CardDescription className="text-sm text-slate-500">
+            <CardDescription className="text-base leading-6 text-slate-500">
               Join the next generation of predictive intelligence.
             </CardDescription>
           </div>
@@ -145,7 +145,7 @@ export function RegisterForm() {
 
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="displayName">Full name</Label>
+                <Label htmlFor="displayName" className="text-base">Full name</Label>
                 <Input
                   id="displayName"
                   type="text"
@@ -154,7 +154,7 @@ export function RegisterForm() {
                   disabled={isSubmitting}
                   aria-invalid={Boolean(errors.displayName)}
                   aria-describedby={errors.displayName ? 'display-name-error' : undefined}
-                  className="border-gray-300 bg-gray-50 text-slate-900 placeholder:text-slate-400"
+                  className="border-gray-300 bg-gray-50 text-base text-slate-900 placeholder:text-slate-400"
                   {...register('displayName', {
                     onChange: clearError,
                   })}
@@ -167,7 +167,7 @@ export function RegisterForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email" className="text-base">Email address</Label>
                 <Input
                   id="email"
                   type="email"
@@ -176,7 +176,7 @@ export function RegisterForm() {
                   disabled={isSubmitting}
                   aria-invalid={Boolean(errors.email)}
                   aria-describedby={errors.email ? 'email-error' : undefined}
-                  className="border-gray-300 bg-gray-50 text-slate-900 placeholder:text-slate-400"
+                  className="border-gray-300 bg-gray-50 text-base text-slate-900 placeholder:text-slate-400"
                   {...register('email', {
                     onChange: clearError,
                   })}
@@ -190,14 +190,14 @@ export function RegisterForm() {
 
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-base">Password</Label>
                   <div className="relative">
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       autoComplete="new-password"
                       disabled={isSubmitting}
-                      className="pr-10 border-gray-300 bg-gray-50 text-slate-900 placeholder:text-slate-400"
+                      className="border-gray-300 bg-gray-50 pr-10 text-base text-slate-900 placeholder:text-slate-400"
                       aria-invalid={Boolean(errors.password)}
                       aria-describedby={
                         errors.password ? 'registration-password-error' : 'password-requirement'
@@ -229,21 +229,21 @@ export function RegisterForm() {
                       {errors.password.message}
                     </p>
                   ) : (
-                    <p id="password-requirement" className="text-xs text-slate-500">
+                    <p id="password-requirement" className="text-sm text-slate-500">
                       Use at least 12 characters.
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm password</Label>
+                  <Label htmlFor="confirmPassword" className="text-base">Confirm password</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
                       type={showConfirmation ? 'text' : 'password'}
                       autoComplete="new-password"
                       disabled={isSubmitting}
-                      className="pr-10 border-gray-300 bg-gray-50 text-slate-900 placeholder:text-slate-400"
+                      className="border-gray-300 bg-gray-50 pr-10 text-base text-slate-900 placeholder:text-slate-400"
                       aria-invalid={Boolean(errors.confirmPassword)}
                       aria-describedby={
                         errors.confirmPassword ? 'confirm-password-error' : undefined
@@ -286,7 +286,7 @@ export function RegisterForm() {
             <Button
               type="submit"
               size="lg"
-              className="w-full bg-indigo-700 text-white hover:bg-indigo-600"
+              className="w-full bg-indigo-700 text-base text-white hover:bg-indigo-600"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -299,7 +299,7 @@ export function RegisterForm() {
               )}
             </Button>
 
-            <p className="text-center text-sm text-slate-500">
+            <p className="text-center text-base text-slate-500">
               Already have an account?{' '}
               <Link
                 href={loginHref}

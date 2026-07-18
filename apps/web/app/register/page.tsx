@@ -45,13 +45,13 @@ export default function RegisterPage() {
   return (
     <Suspense fallback={<RegisterFallback />}>
       <main className="min-h-dvh flex flex-col bg-white lg:min-h-screen lg:flex-row">
-        <aside className="hidden relative flex-1 flex-col justify-between overflow-hidden bg-indigo-700 px-8 py-16 text-white lg:flex">
-          <div className="relative z-10 flex flex-col gap-8">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold uppercase tracking-[0.3em] text-white/90">
+        <aside className="relative hidden flex-1 overflow-hidden bg-indigo-800 px-8 py-12 text-white lg:grid lg:min-h-dvh lg:place-items-center">
+          <div className="relative z-10 w-full max-w-xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 mb-6 text-sm font-semibold uppercase tracking-[0.3em] text-white/90">
               ForecastMe
             </div>
 
-            <div className="max-w-xl space-y-6">
+            <div className="mt-8 space-y-6">
               <h1 className="text-5xl font-bold leading-tight tracking-tight">
                 Multi-Domain Predictive Intelligence Platform
               </h1>
