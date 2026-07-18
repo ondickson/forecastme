@@ -14,7 +14,7 @@ interface AppSidebarProps {
 export function AppSidebar({ onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
 
- return (
+  return (
     <aside
       aria-label="Primary navigation"
       className="flex h-full min-h-0 flex-col border-r bg-background text-foreground"

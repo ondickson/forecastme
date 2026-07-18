@@ -145,7 +145,9 @@ export function RegisterForm() {
 
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="displayName" className="text-base">Full name</Label>
+                <Label htmlFor="displayName" className="text-base">
+                  Full name
+                </Label>
                 <Input
                   id="displayName"
                   type="text"
@@ -167,7 +169,9 @@ export function RegisterForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-base">Email address</Label>
+                <Label htmlFor="email" className="text-base">
+                  Email address
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -190,7 +194,9 @@ export function RegisterForm() {
 
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-base">Password</Label>
+                  <Label htmlFor="password" className="text-base">
+                    Password
+                  </Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -236,7 +242,9 @@ export function RegisterForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-base">Confirm password</Label>
+                  <Label htmlFor="confirmPassword" className="text-base">
+                    Confirm password
+                  </Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"

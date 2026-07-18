@@ -30,13 +30,10 @@ export function ConversationWorkspace({
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                New Analysis
-              </h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">New Analysis</h1>
 
               <p className="mt-1 max-w-2xl text-base leading-6 text-muted-foreground">
-                Ask a question, configure the analysis, and generate decision-ready
-                intelligence.
+                Ask a question, configure the analysis, and generate decision-ready intelligence.
               </p>
             </div>
           </div>
