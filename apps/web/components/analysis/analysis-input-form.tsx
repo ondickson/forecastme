@@ -31,7 +31,7 @@ const DEFAULT_VALUES: AnalysisFormValues = {
   question: '',
   domain: 'GENERAL_RESEARCH',
   timeHorizon: 'NEXT_7_DAYS',
-  riskPreference: 'BALANCED',
+  riskPreference: 'medium',
   attachment: null,
 };
 
@@ -58,19 +58,19 @@ const TIME_HORIZON_OPTIONS: ReadonlyArray<{
   { value: 'LONG_TERM', label: 'Long term' },
 ];
 
-const RISK_OPTIONS: ReadonlyArray<{
+const RISK_OPTIONS: {
   value: RiskPreference;
   label: string;
-}> = [
-  { value: 'CONSERVATIVE', label: 'Conservative' },
-  { value: 'BALANCED', label: 'Balanced' },
-  { value: 'AGGRESSIVE', label: 'Aggressive' },
+}[] = [
+  { value: 'low', label: 'Conservative' },
+  { value: 'medium', label: 'Balanced' },
+  { value: 'high', label: 'Aggressive' },
 ];
 
 const RISK_DESCRIPTIONS: Record<RiskPreference, string> = {
-  CONSERVATIVE: 'Prioritize lower uncertainty and downside protection.',
-  BALANCED: 'Balance potential opportunity with reasonable risk controls.',
-  AGGRESSIVE: 'Accept greater uncertainty in pursuit of higher potential returns.',
+  low: 'Prioritize lower uncertainty and downside protection.',
+  medium: 'Balance potential opportunity with reasonable risk controls.',
+  high: 'Accept greater uncertainty in pursuit of higher potential returns.',
 };
 
 const selectClassName =
@@ -386,7 +386,10 @@ export function AnalysisInputForm({
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <LoaderCircle className="animate-spin" aria-hidden="true" />
+                <LoaderCircle
+                  className="animate-spin motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
                 Submitting...
               </>
             ) : (

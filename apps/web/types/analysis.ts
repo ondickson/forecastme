@@ -1,3 +1,19 @@
+import type { AnalysisResult } from '@forecastme/contracts';
+
+export type {
+  AnalysisConfidence,
+  AnalysisResult,
+  AnalysisSource,
+  ConfidenceLevel,
+  DataFreshness,
+  EvidenceImpact,
+  EvidenceItem,
+  FreshnessStatus,
+  ModelInformation,
+  RiskFactor,
+  StrengthLevel,
+} from '@forecastme/contracts';
+
 export const ANALYSIS_DOMAINS = [
   'GENERAL_RESEARCH',
   'CUSTOM_DATASET',
@@ -30,7 +46,7 @@ export const TIME_HORIZONS = [
 
 export type TimeHorizon = (typeof TIME_HORIZONS)[number];
 
-export const RISK_PREFERENCES = ['CONSERVATIVE', 'BALANCED', 'AGGRESSIVE'] as const;
+export const RISK_PREFERENCES = ['low', 'medium', 'high'] as const;
 
 export type RiskPreference = (typeof RISK_PREFERENCES)[number];
 
@@ -65,10 +81,10 @@ export interface AnalysisResultRecord {
   id: string;
   analysisRequestId: string;
   summary: string | null;
+  content: AnalysisResult;
   probability: number | null;
   confidence: number | null;
-  evidence: unknown;
-  metadata: unknown;
+  riskScore: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -82,12 +98,41 @@ export interface AnalysisRequestRecord {
   prompt: string;
   domain: AnalysisDomain;
   status: AnalysisStatus;
-  parameters: Record<string, unknown>;
+  parameters: AnalysisParameters | null;
+  errorCode: string | null;
   errorMessage: string | null;
+  startedAt: string | null;
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;
-  result?: AnalysisResultRecord | null;
+  result: AnalysisResultRecord | null;
+}
+
+export interface AnalysisHistoryItem {
+  id: string;
+  prompt: string;
+  domain: AnalysisDomain;
+  status: AnalysisStatus;
+  probability: number | null;
+  confidenceScore: number | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+}
+
+export interface PaginatedAnalysesResponse {
+  items: AnalysisHistoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ListAnalysesOptions {
+  page?: number;
+  limit?: number;
+  status?: AnalysisStatus;
+  domain?: AnalysisDomain;
 }
 
 export type AnalysisSubmissionStatus = 'idle' | 'submitting' | 'succeeded' | 'failed';

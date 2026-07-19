@@ -1,9 +1,14 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { AnalysisDomain, AnalysisStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { PythonService } from '../python/python.service';
 import { AnalysesService } from './analyses.service';
 import { CreateAnalysisDto } from './dto';
+import type { AnalysisResult } from '@forecastme/contracts';
 
 describe('AnalysesService', () => {
   let service: AnalysesService;
@@ -45,6 +50,89 @@ describe('AnalysesService', () => {
     analyze: jest.fn(),
   };
 
+  const canonicalResult: AnalysisResult = {
+    directAnswer: 'Interest rates are likely to fall.',
+    probability: 0.65,
+    confidence: {
+      score: 0.8,
+      level: 'HIGH',
+      explanation: 'The supplied test indicators support the result.',
+    },
+    evidence: [
+      {
+        id: 'evidence-1',
+        title: 'Inflation trend',
+        description: 'Inflation has declined in this deterministic fixture.',
+        impact: 'SUPPORTS',
+        strength: 'HIGH',
+      },
+    ],
+    riskFactors: [
+      {
+        id: 'risk-1',
+        title: 'Inflation reversal',
+        description: 'Renewed inflation could delay rate reductions.',
+        severity: 'MEDIUM',
+      },
+    ],
+    suggestedAction: 'Monitor the next central-bank announcement.',
+    sources: [
+      {
+        id: 'source-1',
+        title: 'Deterministic test source',
+        url: 'https://example.com/test-source',
+        publisher: 'ForecastMe Tests',
+        retrievedAt: '2026-07-18T10:00:00.000Z',
+      },
+    ],
+    model: {
+      name: 'forecastme-test-model',
+      version: '1.0.0',
+      method: 'deterministic-test-fixture',
+    },
+    dataFreshness: {
+      generatedAt: '2026-07-18T10:00:00.000Z',
+      dataAsOf: '2026-07-18T09:00:00.000Z',
+      status: 'CURRENT',
+    },
+  };
+
+  const persistedResult = {
+    id: 'result-1',
+    analysisRequestId: 'analysis-1',
+    summary: canonicalResult.directAnswer,
+    content: canonicalResult,
+    probability: 0.65,
+    confidence: 0.8,
+    riskScore: null,
+    createdAt: new Date('2026-07-15T00:02:00.000Z'),
+    updatedAt: new Date('2026-07-15T00:02:00.000Z'),
+  };
+
+  const historySelect = {
+    id: true,
+    prompt: true,
+    domain: true,
+    status: true,
+    createdAt: true,
+    updatedAt: true,
+    completedAt: true,
+    result: {
+      select: {
+        probability: true,
+        confidence: true,
+      },
+    },
+  };
+
+  const completedPythonResponse = {
+    analysisId: 'analysis-1',
+    status: 'completed' as const,
+    result: canonicalResult,
+    processingTimeMs: 25,
+    error: null,
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -79,8 +167,8 @@ describe('AnalysesService', () => {
         result: {
           id: 'result-1',
           analysisRequestId: 'analysis-1',
-          summary: 'Analysis completed',
-          content: {},
+          summary: canonicalResult.directAnswer,
+          content: canonicalResult,
           probability: 0.65,
           confidence: 0.8,
           riskScore: null,
@@ -94,21 +182,7 @@ describe('AnalysesService', () => {
       prisma.analysisResult.create.mockResolvedValue(completedAnalysis.result);
       prisma.analysisRequest.findUnique.mockResolvedValue(completedAnalysis);
 
-      pythonService.analyze.mockResolvedValue({
-        analysisId: 'analysis-1',
-        status: 'completed',
-        result: {
-          outcome: 'England win',
-          probability: 0.65,
-          confidence: 0.8,
-          recommendation: 'Moderate confidence only.',
-        },
-        summary: 'Analysis completed',
-        assumptions: [],
-        limitations: [],
-        sources: [],
-        processingTimeMs: 25,
-      });
+      pythonService.analyze.mockResolvedValue(completedPythonResponse);
 
       prisma.$transaction.mockResolvedValue([
         completedAnalysis.result,
@@ -139,16 +213,123 @@ describe('AnalysesService', () => {
         correlationId: 'analysis-1',
       });
 
-      expect(prisma.analysisResult.create).toHaveBeenCalled();
+      expect(prisma.analysisResult.create).toHaveBeenCalledWith({
+        data: {
+          analysisRequestId: 'analysis-1',
+          summary: canonicalResult.directAnswer,
+          content: canonicalResult,
+          probability: canonicalResult.probability,
+          confidence: canonicalResult.confidence.score,
+          riskScore: null,
+        },
+      });
+
+      expect(prisma.analysisRequest.update).toHaveBeenCalledWith({
+        where: {
+          id: 'analysis-1',
+        },
+        data: {
+          status: AnalysisStatus.COMPLETED,
+          completedAt: expect.any(Date) as Date,
+          errorCode: null,
+          errorMessage: null,
+        },
+        include: {
+          result: true,
+        },
+      });
       expect(result).toEqual(completedAnalysis);
+    });
+
+    it('persists FAILED when Python returns a failed response', async () => {
+      const dto: CreateAnalysisDto = {
+        prompt: 'Will interest rates fall?',
+        domain: AnalysisDomain.FINANCIAL_MARKET,
+      };
+
+      prisma.analysisRequest.create.mockResolvedValue({
+        ...analysisRequest,
+        prompt: dto.prompt,
+        domain: dto.domain,
+      });
+
+      prisma.analysisRequest.update.mockResolvedValue(analysisRequest);
+
+      pythonService.analyze.mockResolvedValue({
+        analysisId: 'analysis-1',
+        status: 'failed',
+        result: null,
+        processingTimeMs: 25,
+        error: {
+          code: 'PYTHON_ANALYSIS_FAILED',
+          message: 'Internal downstream failure details.',
+        },
+      });
+
+      await expect(service.create('user-1', dto)).rejects.toBeInstanceOf(
+        BadGatewayException,
+      );
+
+      expect(prisma.analysisResult.create).not.toHaveBeenCalled();
+
+      expect(prisma.analysisRequest.update).toHaveBeenLastCalledWith({
+        where: {
+          id: 'analysis-1',
+        },
+        data: {
+          status: AnalysisStatus.FAILED,
+          errorCode: 'ANALYSIS_PROCESSING_FAILED',
+          errorMessage:
+            'ForecastMe could not complete this analysis. Please try again.',
+          completedAt: expect.any(Date) as Date,
+        },
+      });
+    });
+
+    it('stores a safe failure reason when the Python request throws', async () => {
+      const dto: CreateAnalysisDto = {
+        prompt: 'Will interest rates fall?',
+        domain: AnalysisDomain.FINANCIAL_MARKET,
+      };
+
+      const internalError = new Error(
+        'connect ECONNREFUSED secret-internal-host:8000',
+      );
+
+      prisma.analysisRequest.create.mockResolvedValue({
+        ...analysisRequest,
+        prompt: dto.prompt,
+        domain: dto.domain,
+      });
+
+      prisma.analysisRequest.update.mockResolvedValue(analysisRequest);
+      pythonService.analyze.mockRejectedValue(internalError);
+
+      await expect(service.create('user-1', dto)).rejects.toBe(internalError);
+
+      expect(prisma.analysisResult.create).not.toHaveBeenCalled();
+
+      expect(prisma.analysisRequest.update).toHaveBeenLastCalledWith({
+        where: {
+          id: 'analysis-1',
+        },
+        data: {
+          status: AnalysisStatus.FAILED,
+          errorCode: 'ANALYSIS_PROCESSING_FAILED',
+          errorMessage:
+            'ForecastMe could not complete this analysis. Please try again.',
+          completedAt: expect.any(Date) as Date,
+        },
+      });
     });
   });
 
   describe('findById', () => {
-    it('returns an analysis owned by the user', async () => {
+    it('returns the complete saved result to its owner', async () => {
       prisma.analysisRequest.findUnique.mockResolvedValue({
         ...analysisRequest,
-        result: null,
+        status: AnalysisStatus.COMPLETED,
+        result: persistedResult,
       });
 
       const result = await service.findById('analysis-1', 'user-1');
@@ -163,6 +344,8 @@ describe('AnalysesService', () => {
       });
 
       expect(result.id).toBe('analysis-1');
+      expect(result.result?.analysisRequestId).toBe('analysis-1');
+      expect(result.result?.content).toEqual(canonicalResult);
     });
 
     it('throws NotFoundException when the analysis does not exist', async () => {
@@ -177,7 +360,8 @@ describe('AnalysesService', () => {
       prisma.analysisRequest.findUnique.mockResolvedValue({
         ...analysisRequest,
         userId: 'user-2',
-        result: null,
+        status: AnalysisStatus.COMPLETED,
+        result: persistedResult,
       });
 
       await expect(
@@ -187,13 +371,23 @@ describe('AnalysesService', () => {
   });
 
   describe('findAll', () => {
-    it('returns only analyses requested for the authenticated user', async () => {
+    it('returns lightweight summaries for the authenticated user', async () => {
       prisma.analysisRequest.findMany.mockResolvedValue([
         {
-          ...analysisRequest,
-          result: null,
+          id: 'analysis-1',
+          prompt: analysisRequest.prompt,
+          domain: AnalysisDomain.SPORTS,
+          status: AnalysisStatus.COMPLETED,
+          createdAt: analysisRequest.createdAt,
+          updatedAt: analysisRequest.updatedAt,
+          completedAt: new Date('2026-07-15T00:02:00.000Z'),
+          result: {
+            probability: 0.65,
+            confidence: 0.8,
+          },
         },
       ]);
+
       prisma.analysisRequest.count.mockResolvedValue(1);
 
       const result = await service.findAll({
@@ -211,9 +405,7 @@ describe('AnalysesService', () => {
         },
         skip: 0,
         take: 20,
-        include: {
-          result: true,
-        },
+        select: historySelect,
       });
 
       expect(prisma.analysisRequest.count).toHaveBeenCalledWith({
@@ -225,8 +417,15 @@ describe('AnalysesService', () => {
       expect(result).toEqual({
         items: [
           {
-            ...analysisRequest,
-            result: null,
+            id: 'analysis-1',
+            prompt: analysisRequest.prompt,
+            domain: AnalysisDomain.SPORTS,
+            status: AnalysisStatus.COMPLETED,
+            probability: 0.65,
+            confidenceScore: 0.8,
+            createdAt: analysisRequest.createdAt,
+            updatedAt: analysisRequest.updatedAt,
+            completedAt: new Date('2026-07-15T00:02:00.000Z'),
           },
         ],
         total: 1,
@@ -234,6 +433,9 @@ describe('AnalysesService', () => {
         limit: 20,
         totalPages: 1,
       });
+
+      expect(result.items[0]).not.toHaveProperty('result');
+      expect(result.items[0]).not.toHaveProperty('content');
     });
 
     it('applies status, domain, and pagination filters', async () => {
@@ -259,9 +461,7 @@ describe('AnalysesService', () => {
         },
         skip: 10,
         take: 10,
-        include: {
-          result: true,
-        },
+        select: historySelect,
       });
     });
   });

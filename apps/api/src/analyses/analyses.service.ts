@@ -1,4 +1,5 @@
 import {
+  BadGatewayException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -66,14 +67,24 @@ export class AnalysesService {
         options: dto.parameters,
         correlationId: analysis.id,
       });
+      if (
+        pythonResponse.status !== 'completed' ||
+        pythonResponse.result === null
+      ) {
+        throw new BadGatewayException(
+          'The analysis service could not complete the analysis',
+        );
+      }
+
+      const analysisResult = pythonResponse.result;
       await this.prisma.$transaction([
         this.prisma.analysisResult.create({
           data: {
             analysisRequestId: analysis.id,
-            summary: pythonResponse.summary,
-            content: pythonResponse as unknown as Prisma.InputJsonValue,
-            probability: pythonResponse.result.probability,
-            confidence: pythonResponse.result.confidence,
+            summary: analysisResult.directAnswer,
+            content: analysisResult as unknown as Prisma.InputJsonValue,
+            probability: analysisResult.probability,
+            confidence: analysisResult.confidence.score,
             riskScore: null,
           },
         }),
@@ -95,10 +106,7 @@ export class AnalysesService {
 
       return this.findById(analysis.id, userId);
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Analysis processing failed';
-
-      await this.markFailed(analysis.id, message);
+      await this.markFailed(analysis.id);
 
       throw error;
     }
@@ -146,8 +154,20 @@ export class AnalysesService {
         },
         skip,
         take: options.limit,
-        include: {
-          result: true,
+        select: {
+          id: true,
+          prompt: true,
+          domain: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          completedAt: true,
+          result: {
+            select: {
+              probability: true,
+              confidence: true,
+            },
+          },
         },
       }),
       this.prisma.analysisRequest.count({
@@ -156,7 +176,25 @@ export class AnalysesService {
     ]);
 
     return {
-      items,
+      items: items.map((item) => ({
+        id: item.id,
+        prompt: item.prompt,
+        domain: item.domain,
+        status: item.status,
+        probability:
+          item.result?.probability === null ||
+          item.result?.probability === undefined
+            ? null
+            : Number(item.result.probability),
+        confidenceScore:
+          item.result?.confidence === null ||
+          item.result?.confidence === undefined
+            ? null
+            : Number(item.result.confidence),
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        completedAt: item.completedAt,
+      })),
       total,
       page: options.page,
       limit: options.limit,
@@ -200,15 +238,16 @@ export class AnalysesService {
     });
   }
 
-  private async markFailed(analysisId: string, message: string) {
+  private async markFailed(analysisId: string) {
     await this.prisma.analysisRequest.update({
       where: {
         id: analysisId,
       },
       data: {
         status: AnalysisStatus.FAILED,
-        errorCode: 'ANALYSIS_SERVICE_ERROR',
-        errorMessage: message,
+        errorCode: 'ANALYSIS_PROCESSING_FAILED',
+        errorMessage:
+          'ForecastMe could not complete this analysis. Please try again.',
         completedAt: new Date(),
       },
     });

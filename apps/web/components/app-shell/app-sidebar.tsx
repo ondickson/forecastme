@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Sparkles } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { AccountMenu } from '@/components/app-shell/account-menu';
 import { navigationSections } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
@@ -87,8 +87,8 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
         </div>
       </nav>
 
-      <div className="shrink-0 border-t p-3">
-        <div className="rounded-xl bg-indigo-50 p-4 text-indigo-950">
+      <div className="shrink-0 p-3">
+        {/* <div className="rounded-xl bg-indigo-50 p-4 text-indigo-950">
           <div className="flex items-center gap-2">
             <Sparkles className="size-4 text-indigo-700" aria-hidden="true" />
             <p className="text-sm font-semibold">Decision intelligence</p>
@@ -97,7 +97,7 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
           <p className="mt-2 text-xs leading-5 text-indigo-900/70">
             Research, datasets, sports, and markets in one workspace.
           </p>
-        </div>
+        </div> */}
 
         <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border bg-background px-3 py-2.5">
           <div className="min-w-0">

@@ -95,10 +95,11 @@ export function AppShell() {
         analysis={analysis}
         submittedValues={submittedValues}
         submissionStatus={submissionStatus}
+        apiError={apiError}
       />
 
       <main className="min-h-0 min-w-0 flex-1">
-        <div className="grid h-full min-h-0 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_23rem]">
+        <div className="grid h-full min-h-0 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_30rem]">
           <ConversationWorkspace
             isSubmitting={isSubmitting}
             apiError={apiError}
@@ -112,6 +113,7 @@ export function AppShell() {
               analysis={analysis}
               submittedValues={submittedValues}
               submissionStatus={submissionStatus}
+              apiError={apiError}
             />
           </div>
         </div>

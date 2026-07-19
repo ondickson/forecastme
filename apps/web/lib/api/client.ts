@@ -50,7 +50,14 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
       return undefined as T;
     }
 
-    return (await response.json()) as T;
+    try {
+      return (await response.json()) as T;
+    } catch {
+      throw new ApiError('ForecastMe received an invalid response from the API.', {
+        status: 502,
+        code: 'INVALID_API_RESPONSE',
+      });
+    }
   }
 
   let payload: ApiErrorPayload | undefined;

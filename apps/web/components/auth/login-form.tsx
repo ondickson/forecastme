@@ -85,7 +85,10 @@ export function LoginForm() {
         aria-live="polite"
       >
         <div className="flex items-center gap-2 text-sm text-slate-500">
-          <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
+          <LoaderCircle
+            className="size-5 animate-spin motion-reduce:animate-none"
+            aria-hidden="true"
+          />
           Checking your session...
         </div>
       </div>
@@ -100,7 +103,10 @@ export function LoginForm() {
         aria-live="polite"
       >
         <div className="flex items-center gap-2 text-sm text-slate-500">
-          <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
+          <LoaderCircle
+            className="size-5 animate-spin motion-reduce:animate-none"
+            aria-hidden="true"
+          />
           Redirecting...
         </div>
       </div>
@@ -211,7 +217,10 @@ export function LoginForm() {
           <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                <LoaderCircle
+                  className="size-4 animate-spin motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
                 Signing in...
               </>
             ) : (

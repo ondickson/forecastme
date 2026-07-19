@@ -35,7 +35,7 @@ export interface AnalysisOptions {
   includeSources?: boolean;
   includeConfidence?: boolean;
   timeHorizon?: string;
-  riskTolerance?: 'low' | 'medium' | 'high';
+  riskPreference?: 'low' | 'medium' | 'high';
 }
 
 /**
@@ -63,35 +63,114 @@ export interface AnalysisServiceRequest {
 }
 
 /**
- * A source used during an analysis.
+ * Supported confidence levels.
+ */
+export const confidenceLevels = ['LOW', 'MEDIUM', 'HIGH'] as const;
+
+export type ConfidenceLevel = (typeof confidenceLevels)[number];
+
+/**
+ * How an evidence item affects the predicted outcome.
+ */
+export const evidenceImpacts = ['SUPPORTS', 'OPPOSES', 'NEUTRAL'] as const;
+
+export type EvidenceImpact = (typeof evidenceImpacts)[number];
+
+/**
+ * Supported evidence-strength and risk-severity levels.
+ */
+export const strengthLevels = ['LOW', 'MEDIUM', 'HIGH'] as const;
+
+export type StrengthLevel = (typeof strengthLevels)[number];
+
+/**
+ * Supported data-freshness states.
+ */
+export const freshnessStatuses = ['CURRENT', 'AGING', 'STALE', 'UNKNOWN'] as const;
+
+export type FreshnessStatus = (typeof freshnessStatuses)[number];
+
+/**
+ * Confidence describes how reliable ForecastMe considers an estimate.
+ *
+ * It is separate from probability, which describes the estimated likelihood
+ * of an outcome.
+ */
+export interface AnalysisConfidence {
+  score: number | null;
+  level: ConfidenceLevel | null;
+  explanation: string | null;
+}
+
+/**
+ * Verified information used to support or oppose the result.
+ */
+export interface EvidenceItem {
+  id: string;
+  title: string;
+  description: string;
+  impact: EvidenceImpact | null;
+  strength: StrengthLevel | null;
+}
+
+/**
+ * A condition that could negatively affect the result.
+ */
+export interface RiskFactor {
+  id: string;
+  title: string;
+  description: string;
+  severity: StrengthLevel | null;
+}
+
+/**
+ * A verified source used during the analysis.
  */
 export interface AnalysisSource {
-  name: string;
-  type: 'api' | 'dataset' | 'document' | 'model' | 'manual';
-  reference?: string;
-  retrievedAt?: string;
+  id: string;
+  title: string;
+  url: string | null;
+  publisher: string | null;
+  retrievedAt: string | null;
 }
 
 /**
- * Model metadata associated with an analytical result.
+ * Exact model or analytical method used to produce the result.
  */
-export interface ModelMetadata {
+export interface ModelInformation {
   name: string;
   version: string;
-  trainedAt?: string;
+  method: string | null;
 }
 
 /**
- * Core probability output.
+ * Timestamp and freshness information for the result.
  *
- * Probability and confidence values must be represented between 0 and 1.
+ * Timestamps must be UTC ISO 8601 strings.
  */
-export interface PredictionResult {
-  outcome: string;
-  probability: number;
-  confidence?: number;
-  expectedValue?: number;
-  recommendation?: string;
+export interface DataFreshness {
+  generatedAt: string;
+  dataAsOf: string | null;
+  status: FreshnessStatus;
+}
+
+/**
+ * Canonical ForecastMe result shared by Python, NestJS, persistence,
+ * and the frontend.
+ *
+ * Probability uses a zero-to-one scale and must be null when it cannot
+ * be calculated. The frontend is responsible for percentage formatting.
+ */
+export interface AnalysisResult {
+  directAnswer: string;
+  probability: number | null;
+  confidence: AnalysisConfidence;
+  evidence: EvidenceItem[];
+  riskFactors: RiskFactor[];
+  suggestedAction: string | null;
+  sources: AnalysisSource[];
+  model: ModelInformation;
+  dataFreshness: DataFreshness;
 }
 
 /**
@@ -100,17 +179,12 @@ export interface PredictionResult {
 export interface AnalysisServiceResponse {
   analysisId: string;
   status: AnalysisStatus;
-  result?: PredictionResult;
-  summary?: string;
-  assumptions: string[];
-  limitations: string[];
-  sources: AnalysisSource[];
-  model?: ModelMetadata;
-  processingTimeMs?: number;
-  error?: {
+  result: AnalysisResult | null;
+  processingTimeMs: number | null;
+  error: {
     code: string;
     message: string;
-  };
+  } | null;
 }
 
 /**
@@ -121,15 +195,10 @@ export interface AnalysisResponse {
   question: string;
   domain: AnalysisDomain;
   status: AnalysisStatus;
-  result?: PredictionResult;
-  summary?: string;
-  assumptions: string[];
-  limitations: string[];
-  sources: AnalysisSource[];
-  model?: ModelMetadata;
+  result: AnalysisResult | null;
   createdAt: string;
   updatedAt: string;
-  completedAt?: string;
+  completedAt: string | null;
 }
 
 /**
@@ -140,7 +209,8 @@ export interface AnalysisHistoryItem {
   question: string;
   domain: AnalysisDomain;
   status: AnalysisStatus;
-  probability?: number;
+  probability: number | null;
+  confidenceLevel: ConfidenceLevel | null;
   createdAt: string;
-  completedAt?: string;
+  completedAt: string | null;
 }

@@ -430,7 +430,10 @@ function DatasetCard({ dataset }: DatasetCardProps) {
                 )}
               >
                 <StatusIcon
-                  className={cn('size-3.5', dataset.status === 'Processing' && 'animate-spin')}
+                  className={cn(
+                    'size-3.5',
+                    dataset.status === 'Processing' && 'animate-spin motion-reduce:animate-none',
+                  )}
                   aria-hidden="true"
                 />
                 {dataset.status}

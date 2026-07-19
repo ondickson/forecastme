@@ -93,7 +93,7 @@ export function AccountMenu() {
           onClick={() => void handleLogout()}
         >
           {isLoggingOut ? (
-            <LoaderCircle className="animate-spin" aria-hidden="true" />
+            <LoaderCircle className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
           ) : (
             <LogOut aria-hidden="true" />
           )}

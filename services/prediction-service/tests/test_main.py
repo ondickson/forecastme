@@ -1,7 +1,19 @@
+from datetime import UTC, datetime
+
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from app.main import app
+from app.schemas.analysis import (
+    AnalysisConfidence,
+    AnalysisResult,
+    AnalysisServiceResponse,
+    AnalysisStatus,
+    DataFreshness,
+    FreshnessStatus,
+    ModelInformation,
+)
 
 client = TestClient(app)
 
@@ -98,7 +110,7 @@ def test_create_analysis_endpoint() -> None:
                 "includeSources": True,
                 "includeConfidence": True,
                 "timeHorizon": "next_match",
-                "riskTolerance": "medium",
+                "riskPreference": "medium",
             },
             "correlationId": "correlation_test_001",
         },
@@ -107,13 +119,42 @@ def test_create_analysis_endpoint() -> None:
     assert response.status_code == 200
 
     body = response.json()
+    result = body["result"]
 
     assert body["analysisId"] == "analysis_test_001"
     assert body["status"] == "completed"
-    assert body["result"]["outcome"] == "Contract validation successful"
-    assert body["result"]["probability"] == 0.5
-    assert body["result"]["confidence"] == 0.5
-    assert body["processingTimeMs"] == 0
+    assert body["processingTimeMs"] is None
+    assert body["error"] is None
+
+    assert set(result) == {
+        "directAnswer",
+        "probability",
+        "confidence",
+        "evidence",
+        "riskFactors",
+        "suggestedAction",
+        "sources",
+        "model",
+        "dataFreshness",
+    }
+
+    assert "cannot calculate a probability" in result["directAnswer"]
+    assert result["probability"] is None
+    assert result["confidence"]["score"] is None
+    assert result["confidence"]["level"] is None
+    assert result["confidence"]["explanation"]
+    assert result["evidence"] == []
+    assert result["riskFactors"] == []
+    assert result["suggestedAction"] is None
+    assert result["sources"] == []
+    assert result["model"] == {
+        "name": "forecastme-contract-validator",
+        "version": "0.1.0",
+        "method": "schema-validation-only",
+    }
+    assert result["dataFreshness"]["generatedAt"]
+    assert result["dataFreshness"]["dataAsOf"] is None
+    assert result["dataFreshness"]["status"] == "UNKNOWN"
 
 
 def test_existing_request_id_is_preserved() -> None:
@@ -216,3 +257,77 @@ def test_classify_rejects_short_prompt() -> None:
 
     assert body["code"] == "VALIDATION_ERROR"
     assert body["details"]
+
+
+def build_valid_result() -> AnalysisResult:
+    return AnalysisResult(
+        directAnswer="No probability is available.",
+        probability=None,
+        confidence=AnalysisConfidence(
+            score=None,
+            level=None,
+            explanation="No confidence score is available.",
+        ),
+        evidence=[],
+        riskFactors=[],
+        suggestedAction=None,
+        sources=[],
+        model=ModelInformation(
+            name="forecastme-contract-validator",
+            version="0.1.0",
+            method="schema-validation-only",
+        ),
+        dataFreshness=DataFreshness(
+            generatedAt=datetime.now(UTC),
+            dataAsOf=None,
+            status=FreshnessStatus.UNKNOWN,
+        ),
+    )
+
+
+def test_analysis_result_rejects_probability_above_one() -> None:
+    payload = build_valid_result().model_dump(by_alias=True)
+    payload["probability"] = 1.01
+
+    with pytest.raises(ValidationError):
+        AnalysisResult.model_validate(payload)
+
+
+def test_confidence_score_requires_confidence_level() -> None:
+    with pytest.raises(ValidationError):
+        AnalysisConfidence(
+            score=0.6,
+            level=None,
+            explanation=None,
+        )
+
+
+def test_data_freshness_rejects_timestamp_without_timezone() -> None:
+    with pytest.raises(ValidationError):
+        DataFreshness(
+            generatedAt=datetime.now(),
+            dataAsOf=None,
+            status=FreshnessStatus.UNKNOWN,
+        )
+
+
+def test_completed_response_requires_result() -> None:
+    with pytest.raises(ValidationError):
+        AnalysisServiceResponse(
+            analysisId="analysis_missing_result",
+            status=AnalysisStatus.COMPLETED,
+            result=None,
+            processingTimeMs=None,
+            error=None,
+        )
+
+
+def test_failed_response_requires_error() -> None:
+    with pytest.raises(ValidationError):
+        AnalysisServiceResponse(
+            analysisId="analysis_missing_error",
+            status=AnalysisStatus.FAILED,
+            result=None,
+            processingTimeMs=None,
+            error=None,
+        )

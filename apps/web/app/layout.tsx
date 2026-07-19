@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { Geist } from 'next/font/google';
@@ -23,6 +23,12 @@ export const metadata: Metadata = {
   },
   description:
     'Multi-domain predictive intelligence for research, uploaded datasets, sports, and financial markets.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
