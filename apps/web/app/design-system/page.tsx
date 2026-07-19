@@ -123,7 +123,10 @@ export default function DesignSystemPage() {
               <Button variant="ghost">Cancel</Button>
               <Button variant="destructive">Delete analysis</Button>
               <Button disabled>
-                <LoaderCircle className="animate-spin" aria-hidden="true" />
+                <LoaderCircle
+                  className="animate-spin motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
                 Processing
               </Button>
             </CardContent>

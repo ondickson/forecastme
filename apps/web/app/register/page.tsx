@@ -13,7 +13,10 @@ function RegisterFallback() {
       aria-live="polite"
     >
       <div className="flex items-center gap-2 text-sm text-slate-500">
-        <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
+        <LoaderCircle
+          className="size-5 animate-spin motion-reduce:animate-none"
+          aria-hidden="true"
+        />
         Loading registration...
       </div>
     </div>

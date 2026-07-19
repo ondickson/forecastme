@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -12,10 +14,14 @@ from app.middleware.request_id import RequestIdMiddleware
 from app.routers.classification import router as classification_router
 from app.routers.health import router as health_router
 from app.schemas.analysis import (
+    AnalysisConfidence,
+    AnalysisResult,
     AnalysisServiceRequest,
     AnalysisServiceResponse,
     AnalysisStatus,
-    PredictionResult,
+    DataFreshness,
+    FreshnessStatus,
+    ModelInformation,
 )
 
 configure_logging()
@@ -56,7 +62,7 @@ async def root() -> dict[str, str]:
 @app.post(
     "/internal/v1/analyses",
     response_model=AnalysisServiceResponse,
-    tags=["Legacy Analysis Contract"],
+    tags=["Analysis"],
 )
 async def create_analysis(
     request: AnalysisServiceRequest,
@@ -64,19 +70,33 @@ async def create_analysis(
     return AnalysisServiceResponse(
         analysisId=request.analysis_id,
         status=AnalysisStatus.COMPLETED,
-        result=PredictionResult(
-            outcome="Contract validation successful",
-            probability=0.5,
-            confidence=0.5,
-            recommendation="Continue implementing the analysis pipeline.",
+        result=AnalysisResult(
+            directAnswer=(
+                "ForecastMe cannot calculate a probability for this request..."
+            ),
+            probability=None,
+            confidence=AnalysisConfidence(
+                score=None,
+                level=None,
+                explanation=(
+                    "Confidence cannot be scored because no probability was calculated."
+                ),
+            ),
+            evidence=[],
+            riskFactors=[],
+            suggestedAction=None,
+            sources=[],
+            model=ModelInformation(
+                name="forecastme-contract-validator",
+                version="0.1.0",
+                method="schema-validation-only",
+            ),
+            dataFreshness=DataFreshness(
+                generatedAt=datetime.now(UTC),
+                dataAsOf=None,
+                status=FreshnessStatus.UNKNOWN,
+            ),
         ),
-        summary="The request passed the shared ForecastMe analysis contract.",
-        assumptions=[
-            "This is a temporary contract-testing response.",
-        ],
-        limitations=[
-            "No production prediction model has been executed.",
-        ],
-        sources=[],
-        processingTimeMs=0,
+        processingTimeMs=None,
+        error=None,
     )

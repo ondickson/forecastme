@@ -6,7 +6,7 @@ export const exampleAnalysisRequest: CreateAnalysisRequest = {
   options: {
     includeExplanation: true,
     includeConfidence: true,
-    riskTolerance: 'medium',
+    riskPreference: 'medium',
   },
 };
 

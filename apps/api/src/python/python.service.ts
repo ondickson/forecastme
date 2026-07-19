@@ -8,6 +8,11 @@ import {
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { AnalysisDomain } from '../generated/prisma/enums';
+import {
+  InvalidPythonAnalysisResponseError,
+  type PythonAnalysisResponse,
+  validatePythonAnalysisResponse,
+} from './dto/analysis-response.dto';
 
 export interface ClassifyRequest {
   prompt: string;
@@ -24,7 +29,7 @@ export interface PythonAnalysisOptions {
   includeSources?: boolean;
   includeConfidence?: boolean;
   timeHorizon?: string;
-  riskTolerance?: string;
+  riskPreference?: string;
 }
 
 export interface PythonAnalysisRequest {
@@ -33,24 +38,6 @@ export interface PythonAnalysisRequest {
   domain: 'general_research' | 'custom_dataset' | 'sports' | 'financial_market';
   options?: PythonAnalysisOptions;
   correlationId?: string;
-}
-
-export interface PredictionResult {
-  outcome: string;
-  probability: number | null;
-  confidence: number | null;
-  recommendation: string | null;
-}
-
-export interface PythonAnalysisResponse {
-  analysisId: string;
-  status: string;
-  result: PredictionResult;
-  summary: string;
-  assumptions: string[];
-  limitations: string[];
-  sources: unknown[];
-  processingTimeMs: number;
 }
 
 @Injectable()
@@ -82,17 +69,25 @@ export class PythonService {
   ): Promise<PythonAnalysisResponse> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post<PythonAnalysisResponse>(
-          '/internal/v1/analyses',
-          request,
-          {
-            headers: this.createRequestHeaders(requestId),
-          },
-        ),
+        this.httpService.post<unknown>('/internal/v1/analyses', request, {
+          headers: this.createRequestHeaders(requestId),
+        }),
       );
 
-      return response.data;
+      return validatePythonAnalysisResponse(response.data, request.analysisId);
     } catch (error: unknown) {
+      if (error instanceof InvalidPythonAnalysisResponseError) {
+        this.logger.error({
+          message: 'Python service returned an invalid analysis response',
+          requestId,
+          analysisId: request.analysisId,
+        });
+
+        throw new BadGatewayException(
+          'The analysis service returned an invalid response',
+        );
+      }
+
       this.handlePythonServiceError(error, 'analysis', requestId);
     }
   }

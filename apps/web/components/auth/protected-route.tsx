@@ -35,7 +35,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         aria-label="Checking authentication"
       >
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
-          <LoaderCircle className="size-6 animate-spin" aria-hidden="true" />
+          <LoaderCircle
+            className="size-6 animate-spin motion-reduce:animate-none"
+            aria-hidden="true"
+          />
           <p className="text-sm">Checking your session...</p>
         </div>
       </div>

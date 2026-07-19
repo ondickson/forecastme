@@ -1,7 +1,23 @@
+from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    HttpUrl,
+    field_validator,
+    model_validator,
+)
+
+
+class ContractModel(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        extra="forbid",
+        str_strip_whitespace=True,
+    )
 
 
 class AnalysisDomain(StrEnum):
@@ -20,7 +36,32 @@ class AnalysisStatus(StrEnum):
     CANCELLED = "cancelled"
 
 
-class AnalysisOptions(BaseModel):
+class ConfidenceLevel(StrEnum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class EvidenceImpact(StrEnum):
+    SUPPORTS = "SUPPORTS"
+    OPPOSES = "OPPOSES"
+    NEUTRAL = "NEUTRAL"
+
+
+class StrengthLevel(StrEnum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class FreshnessStatus(StrEnum):
+    CURRENT = "CURRENT"
+    AGING = "AGING"
+    STALE = "STALE"
+    UNKNOWN = "UNKNOWN"
+
+
+class AnalysisOptions(ContractModel):
     include_explanation: bool | None = Field(
         default=None,
         alias="includeExplanation",
@@ -39,15 +80,11 @@ class AnalysisOptions(BaseModel):
     )
     risk_tolerance: Literal["low", "medium", "high"] | None = Field(
         default=None,
-        alias="riskTolerance",
+        alias="riskPreference",
     )
 
-    model_config = {
-        "populate_by_name": True,
-    }
 
-
-class AnalysisServiceRequest(BaseModel):
+class AnalysisServiceRequest(ContractModel):
     analysis_id: str = Field(
         alias="analysisId",
         min_length=1,
@@ -67,99 +104,141 @@ class AnalysisServiceRequest(BaseModel):
         min_length=1,
     )
 
-    model_config = {
-        "populate_by_name": True,
-    }
+
+class AnalysisConfidence(ContractModel):
+    score: float | None = Field(ge=0, le=1)
+    level: ConfidenceLevel | None
+    explanation: str | None
+
+    @model_validator(mode="after")
+    def validate_score_and_level(self) -> Self:
+        if (self.score is None) != (self.level is None):
+            raise ValueError(
+                "confidence score and level must either both be set or both be null"
+            )
+
+        return self
 
 
-class AnalysisSource(BaseModel):
-    name: str = Field(min_length=1)
-    type: Literal["api", "dataset", "document", "model", "manual"]
-    reference: str | None = None
-    retrieved_at: str | None = Field(
-        default=None,
-        alias="retrievedAt",
-    )
-
-    model_config = {
-        "populate_by_name": True,
-    }
+class EvidenceItem(ContractModel):
+    id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    impact: EvidenceImpact | None
+    strength: StrengthLevel | None
 
 
-class ModelMetadata(BaseModel):
+class RiskFactor(ContractModel):
+    id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    severity: StrengthLevel | None
+
+
+class AnalysisSource(ContractModel):
+    id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    url: HttpUrl | None
+    publisher: str | None
+    retrieved_at: datetime | None = Field(alias="retrievedAt")
+
+    @field_validator("retrieved_at")
+    @classmethod
+    def validate_retrieved_at(
+        cls,
+        value: datetime | None,
+    ) -> datetime | None:
+        if value is None:
+            return None
+
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("retrievedAt must include a timezone")
+
+        return value.astimezone(UTC)
+
+
+class ModelInformation(ContractModel):
     name: str = Field(min_length=1)
     version: str = Field(min_length=1)
-    trained_at: str | None = Field(
-        default=None,
-        alias="trainedAt",
-    )
-
-    model_config = {
-        "populate_by_name": True,
-    }
+    method: str | None
 
 
-class PredictionResult(BaseModel):
-    outcome: str = Field(min_length=1)
-    probability: float = Field(ge=0, le=1)
-    confidence: float | None = Field(default=None, ge=0, le=1)
-    expected_value: float | None = Field(
-        default=None,
-        alias="expectedValue",
-    )
-    recommendation: str | None = None
+class DataFreshness(ContractModel):
+    generated_at: datetime = Field(alias="generatedAt")
+    data_as_of: datetime | None = Field(alias="dataAsOf")
+    status: FreshnessStatus
 
-    model_config = {
-        "populate_by_name": True,
-    }
-
-    @field_validator("expected_value")
+    @field_validator("generated_at")
     @classmethod
-    def validate_expected_value(cls, value: float | None) -> float | None:
-        if value is not None and not float("-inf") < value < float("inf"):
-            raise ValueError("expectedValue must be a finite number")
+    def validate_generated_at(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("generatedAt must include a timezone")
 
-        return value
+        return value.astimezone(UTC)
+
+    @field_validator("data_as_of")
+    @classmethod
+    def validate_data_as_of(
+        cls,
+        value: datetime | None,
+    ) -> datetime | None:
+        if value is None:
+            return None
+
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("dataAsOf must include a timezone")
+
+        return value.astimezone(UTC)
 
 
-class AnalysisError(BaseModel):
+class AnalysisResult(ContractModel):
+    direct_answer: str = Field(
+        alias="directAnswer",
+        min_length=1,
+    )
+    probability: float | None = Field(ge=0, le=1)
+    confidence: AnalysisConfidence
+    evidence: list[EvidenceItem] = Field(default_factory=list)
+    risk_factors: list[RiskFactor] = Field(
+        default_factory=list,
+        alias="riskFactors",
+    )
+    suggested_action: str | None = Field(alias="suggestedAction")
+    sources: list[AnalysisSource] = Field(default_factory=list)
+    model: ModelInformation
+    data_freshness: DataFreshness = Field(alias="dataFreshness")
+
+
+class AnalysisError(ContractModel):
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
 
 
-class AnalysisServiceResponse(BaseModel):
+class AnalysisServiceResponse(ContractModel):
     analysis_id: str = Field(
         alias="analysisId",
         min_length=1,
     )
     status: AnalysisStatus
-    result: PredictionResult | None = None
-    summary: str | None = None
-    assumptions: list[str] = Field(default_factory=list)
-    limitations: list[str] = Field(default_factory=list)
-    sources: list[AnalysisSource] = Field(default_factory=list)
-    model: ModelMetadata | None = None
+    result: AnalysisResult | None
     processing_time_ms: float | None = Field(
-        default=None,
         alias="processingTimeMs",
         ge=0,
     )
-    error: AnalysisError | None = None
+    error: AnalysisError | None
 
-    model_config = {
-        "populate_by_name": True,
-    }
-
-    @field_validator("result")
-    @classmethod
-    def completed_analysis_requires_result(
-        cls,
-        value: PredictionResult | None,
-        info: ValidationInfo,
-    ) -> PredictionResult | None:
-        status = info.data.get("status")
-
-        if status == AnalysisStatus.COMPLETED and value is None:
+    @model_validator(mode="after")
+    def validate_status_payload(self) -> Self:
+        if self.status == AnalysisStatus.COMPLETED and self.result is None:
             raise ValueError("A completed analysis must contain a result")
 
-        return value
+        if self.status == AnalysisStatus.FAILED and self.error is None:
+            raise ValueError("A failed analysis must contain an error")
+
+        if self.status == AnalysisStatus.FAILED and self.result is not None:
+            raise ValueError("A failed analysis cannot contain a result")
+
+        if self.status != AnalysisStatus.FAILED and self.error is not None:
+            raise ValueError("Only a failed analysis can contain an error")
+
+        return self

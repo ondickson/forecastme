@@ -19,12 +19,14 @@ import type {
 } from '@/types/analysis';
 
 interface MobileAnalysisPanelProps {
+  apiError: string | null;
   analysis: AnalysisRequestRecord | null;
   submittedValues: AnalysisFormValues | null;
   submissionStatus: AnalysisSubmissionStatus;
 }
 
 export function MobileAnalysisPanel({
+  apiError,
   analysis,
   submittedValues,
   submissionStatus,
@@ -72,19 +74,21 @@ export function MobileAnalysisPanel({
 
       <SheetContent
         side="right"
-        className="w-[min(26rem,88vw)] gap-0 p-0 sm:max-w-[26rem]"
+        className="w-[min(30rem,92vw)] gap-0 p-0 sm:max-w-[30rem]"
         showCloseButton
       >
         <SheetTitle className="sr-only">Analysis details</SheetTitle>
 
         <SheetDescription className="sr-only">
-          View the submitted analysis request and its current status.
+          View the prediction, confidence, evidence, risk factors, sources, model information, and
+          data freshness.
         </SheetDescription>
 
         <AnalysisPanel
           analysis={analysis}
           submittedValues={submittedValues}
           submissionStatus={submissionStatus}
+          apiError={apiError}
         />
       </SheetContent>
     </Sheet>
