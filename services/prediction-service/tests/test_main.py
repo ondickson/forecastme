@@ -245,6 +245,142 @@ def test_classify_general_research_prompt() -> None:
     assert response.json()["domain"] == "GENERAL_RESEARCH"
 
 
+def test_classify_unsupported_prompt() -> None:
+    response = client.post(
+        "/classify",
+        json={
+            "prompt": "Give me a weather forecast for tomorrow.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["domain"] == "UNSUPPORTED"
+    assert body["confidence"] == 0.95
+    assert body["reasoning"]
+
+
+def test_classify_extracts_entities() -> None:
+    response = client.post(
+        "/classify",
+        json={
+            "prompt": (
+                "Will Manchester United beat Arsenal in the next football match?"
+            ),
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["domain"] == "SPORTS"
+    assert body["entities"] == ["Manchester United", "Arsenal"]
+
+
+def test_classify_extracts_dates() -> None:
+    response = client.post(
+        "/classify",
+        json={
+            "prompt": ("Compare Apple stock on 2026-07-19 and July 25, 2026."),
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["dates"] == ["2026-07-19", "July 25, 2026"]
+
+
+def test_classify_detects_time_horizon() -> None:
+    response = client.post(
+        "/classify",
+        json={
+            "prompt": "Will Tesla stock rise within 3 months?",
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["domain"] == "FINANCIAL_MARKET"
+    assert body["timeHorizon"] == "within 3 months"
+
+
+def test_classify_detects_prediction_intent() -> None:
+    response = client.post(
+        "/classify",
+        json={
+            "prompt": "What is the probability that demand will increase?",
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["predictionIntent"] is True
+    assert body["comparisonIntent"] is False
+    assert body["riskIntent"] is False
+
+
+def test_classify_detects_comparison_intent() -> None:
+    response = client.post(
+        "/classify",
+        json={
+            "prompt": "Compare Apple stock versus Microsoft stock.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["domain"] == "FINANCIAL_MARKET"
+    assert body["comparisonIntent"] is True
+
+
+def test_classify_detects_risk_intent() -> None:
+    response = client.post(
+        "/classify",
+        json={
+            "prompt": "What is the downside risk of this portfolio?",
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["domain"] == "FINANCIAL_MARKET"
+    assert body["riskIntent"] is True
+
+
+def test_classify_returns_default_metadata() -> None:
+    response = client.post(
+        "/classify",
+        json={
+            "prompt": "Explain the causes of the industrial revolution.",
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["domain"] == "GENERAL_RESEARCH"
+    assert body["entities"] == []
+    assert body["dates"] == []
+    assert body["timeHorizon"] is None
+    assert body["predictionIntent"] is False
+    assert body["comparisonIntent"] is False
+    assert body["riskIntent"] is False
+
+
 def test_classify_rejects_short_prompt() -> None:
     response = client.post(
         "/classify",
