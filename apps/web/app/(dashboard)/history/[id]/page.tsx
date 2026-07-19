@@ -1,10 +1,11 @@
+// forecastme - apps/web/app/(dashboard)/history/[id]/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { ArrowLeft, Clock3, FileText, LoaderCircle, RotateCcw } from 'lucide-react';
-
+import { useParams, useRouter } from 'next/navigation';
+import { ArrowLeft, Clock3, FileText, LoaderCircle, RotateCcw, Trash2 } from 'lucide-react';
 import { AnalysisResultView } from '@/components/analysis-results/analysis-result-view';
 import { ResultEmptyState } from '@/components/analysis-results/result-empty-state';
 import { ResultErrorState } from '@/components/analysis-results/result-error-state';
@@ -12,10 +13,20 @@ import { ResultLoadingState } from '@/components/analysis-results/result-loading
 import { MobilePageHeader } from '@/components/app-shell/mobile-page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { ApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/analysis/result-formatters';
 import { cn } from '@/lib/utils';
-import { getAnalysis } from '@/services/analysis-service';
+import { deleteAnalysis, getAnalysis } from '@/services/analysis-service';
 import type { AnalysisDomain, AnalysisRequestRecord, AnalysisStatus } from '@/types/analysis';
 
 const domainLabels: Record<AnalysisDomain, string> = {
@@ -97,6 +108,28 @@ function getLoadError(error: unknown): DetailLoadError {
     canRetry: true,
     requiresLogin: false,
   };
+}
+
+function getDeleteErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === 'NETWORK_ERROR' || error.status === 0) {
+      return 'The ForecastMe API could not be reached. Check that the API is running and try again.';
+    }
+
+    if (error.status === 401) {
+      return 'Your session has expired. Log in again before deleting this analysis.';
+    }
+
+    if (error.status === 403) {
+      return 'You do not have permission to delete this analysis.';
+    }
+
+    if (error.code === 'INVALID_API_RESPONSE') {
+      return 'ForecastMe returned an invalid deletion response. Refresh the page before trying again.';
+    }
+  }
+
+  return 'ForecastMe could not delete this analysis. Please try again.';
 }
 
 function isProcessingStatus(status: AnalysisStatus): boolean {
@@ -224,6 +257,21 @@ function AnalysisDetail({
   analysis: AnalysisRequestRecord;
   onRefresh: () => void;
 }) {
+  const router = useRouter();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  function handleDeleteDialogOpenChange(open: boolean) {
+    if (isDeleting) {
+      return;
+    }
+
+    setDeleteDialogOpen(open);
+
+    if (!open) {
+      setDeleteError(null);
+    }
+  }
   const processing = isProcessingStatus(analysis.status);
   const failed = analysis.status === 'FAILED';
   const completed = analysis.status === 'COMPLETED';
@@ -236,6 +284,28 @@ function AnalysisDetail({
       : completed
         ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
         : undefined;
+
+  async function handleDeleteAnalysis() {
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await deleteAnalysis(analysis.id);
+      setDeleteDialogOpen(false);
+      router.replace('/history');
+      router.refresh();
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        router.replace('/history');
+        router.refresh();
+        return;
+      }
+
+      setDeleteError(getDeleteErrorMessage(error));
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   return (
     <div className="mt-6 space-y-6">
@@ -276,14 +346,69 @@ function AnalysisDetail({
             </div>
           </div>
 
-          <div className="shrink-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Created
-            </p>
+          <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Created
+              </p>
 
-            <p className="mt-1 whitespace-nowrap text-sm font-medium text-foreground">
-              {formatDateTime(analysis.createdAt)}
-            </p>
+              <p className="mt-1 whitespace-nowrap text-sm font-medium text-foreground">
+                {formatDateTime(analysis.createdAt)}
+              </p>
+            </div>
+
+            <Dialog open={deleteDialogOpen} onOpenChange={handleDeleteDialogOpenChange}>
+              <DialogTrigger render={<Button type="button" variant="destructive" />}>
+                <Trash2 className="size-4" aria-hidden="true" />
+                Delete analysis
+              </DialogTrigger>
+
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete this analysis?</DialogTitle>
+
+                  <DialogDescription>
+                    This permanently deletes the saved question and its result. This action cannot
+                    be undone.
+                  </DialogDescription>
+                </DialogHeader>
+
+                {deleteError ? (
+                  <div
+                    role="alert"
+                    className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+                  >
+                    {deleteError}
+                  </div>
+                ) : null}
+
+                <DialogFooter>
+                  <DialogClose
+                    render={<Button type="button" variant="outline" disabled={isDeleting} />}
+                  >
+                    Cancel
+                  </DialogClose>
+
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={isDeleting}
+                    onClick={() => void handleDeleteAnalysis()}
+                  >
+                    {isDeleting ? (
+                      <LoaderCircle
+                        className="size-4 animate-spin motion-reduce:animate-none"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    )}
+
+                    {isDeleting ? 'Deleting…' : 'Delete permanently'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </header>

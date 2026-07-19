@@ -96,3 +96,9 @@ export async function listAnalyses(
 
   return parseHistoryResponse(response);
 }
+
+export async function deleteAnalysis(id: string): Promise<void> {
+  await authenticatedApiRequest<unknown>(`${ANALYSES_PATH}/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+}
