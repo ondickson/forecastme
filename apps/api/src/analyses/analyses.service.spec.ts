@@ -136,6 +136,8 @@ describe('AnalysesService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    prisma.analysisRequest.findMany.mockResolvedValue([]);
+
     prisma.$transaction.mockImplementation(
       async (operations: Promise<unknown>[]) => Promise.all(operations),
     );
@@ -238,7 +240,120 @@ describe('AnalysesService', () => {
           result: true,
         },
       });
-      expect(result).toEqual(completedAnalysis);
+      expect(result).toEqual({
+        analysis: completedAnalysis,
+        duplicate: false,
+      });
+    });
+
+    it('returns an identical recent analysis without creating another record', async () => {
+      const dto: CreateAnalysisDto = {
+        prompt: 'How much should I invest?',
+        domain: AnalysisDomain.FINANCIAL_MARKET,
+        parameters: {
+          timeHorizon: 'NEXT_7_DAYS',
+          riskPreference: 'medium',
+        },
+      };
+
+      const duplicateAnalysis = {
+        ...analysisRequest,
+        prompt: '  HOW   much should I INVEST?  ',
+        domain: dto.domain,
+        status: AnalysisStatus.COMPLETED,
+        parameters: dto.parameters,
+        result: persistedResult,
+      };
+
+      prisma.analysisRequest.findMany.mockResolvedValue([duplicateAnalysis]);
+
+      const result = await service.create('user-1', dto);
+
+      expect(prisma.analysisRequest.findMany).toHaveBeenCalledWith({
+        where: {
+          userId: 'user-1',
+          domain: dto.domain,
+          conversationId: null,
+          datasetId: null,
+          modelVersionId: null,
+          status: {
+            not: AnalysisStatus.FAILED,
+          },
+          createdAt: {
+            gte: expect.any(Date) as Date,
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 25,
+        include: {
+          result: true,
+        },
+      });
+
+      expect(result).toEqual({
+        analysis: duplicateAnalysis,
+        duplicate: true,
+      });
+
+      expect(prisma.analysisRequest.create).not.toHaveBeenCalled();
+      expect(pythonService.analyze).not.toHaveBeenCalled();
+    });
+
+    it('allows the same question when analysis parameters differ', async () => {
+      const dto: CreateAnalysisDto = {
+        prompt: 'How much should I invest?',
+        domain: AnalysisDomain.FINANCIAL_MARKET,
+        parameters: {
+          timeHorizon: 'NEXT_7_DAYS',
+          riskPreference: 'medium',
+        },
+      };
+
+      prisma.analysisRequest.findMany.mockResolvedValue([
+        {
+          ...analysisRequest,
+          prompt: dto.prompt,
+          domain: dto.domain,
+          status: AnalysisStatus.COMPLETED,
+          parameters: {
+            timeHorizon: 'NEXT_12_MONTHS',
+            riskPreference: 'high',
+          },
+          result: persistedResult,
+        },
+      ]);
+
+      const databaseError = new Error(
+        'Stop after confirming duplicate detection passed.',
+      );
+
+      prisma.analysisRequest.create.mockRejectedValue(databaseError);
+
+      await expect(service.create('user-1', dto)).rejects.toBe(databaseError);
+
+      expect(prisma.analysisRequest.create).toHaveBeenCalled();
+      expect(pythonService.analyze).not.toHaveBeenCalled();
+    });
+
+    it('bypasses duplicate detection for an intentional rerun', async () => {
+      const dto: CreateAnalysisDto = {
+        prompt: 'How much should I invest?',
+        domain: AnalysisDomain.FINANCIAL_MARKET,
+        allowDuplicate: true,
+      };
+
+      const databaseError = new Error(
+        'Stop after confirming duplicate detection was bypassed.',
+      );
+
+      prisma.analysisRequest.create.mockRejectedValue(databaseError);
+
+      await expect(service.create('user-1', dto)).rejects.toBe(databaseError);
+
+      expect(prisma.analysisRequest.findMany).not.toHaveBeenCalled();
+      expect(prisma.analysisRequest.create).toHaveBeenCalled();
     });
 
     it('persists FAILED when Python returns a failed response', async () => {

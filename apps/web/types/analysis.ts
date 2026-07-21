@@ -75,6 +75,7 @@ export interface CreateAnalysisRequest {
   prompt: string;
   domain: AnalysisDomain;
   parameters: AnalysisParameters;
+  allowDuplicate?: boolean;
 }
 
 export interface AnalysisResultRecord {
@@ -106,6 +107,11 @@ export interface AnalysisRequestRecord {
   updatedAt: string;
   completedAt: string | null;
   result: AnalysisResultRecord | null;
+}
+
+export interface CreateAnalysisResponse {
+  analysis: AnalysisRequestRecord;
+  duplicate: boolean;
 }
 
 export interface AnalysisHistoryItem {

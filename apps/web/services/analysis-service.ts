@@ -1,5 +1,6 @@
 import {
   analysisRequestRecordSchema,
+  createAnalysisResponseSchema,
   paginatedAnalysesResponseSchema,
 } from '@/lib/analysis/analysis-response-schema';
 import { authenticatedApiRequest } from '@/lib/api/authenticated-client';
@@ -7,6 +8,7 @@ import { ApiError } from '@/lib/api/errors';
 import type {
   AnalysisRequestRecord,
   CreateAnalysisRequest,
+  CreateAnalysisResponse,
   ListAnalysesOptions,
   PaginatedAnalysesResponse,
 } from '@/types/analysis';
@@ -33,6 +35,16 @@ function parseAnalysisResponse(response: unknown): AnalysisRequestRecord {
   return parsedResponse.data;
 }
 
+function parseCreateAnalysisResponse(response: unknown): CreateAnalysisResponse {
+  const parsedResponse = createAnalysisResponseSchema.safeParse(response);
+
+  if (!parsedResponse.success) {
+    throw invalidResponseError();
+  }
+
+  return parsedResponse.data;
+}
+
 function parseHistoryResponse(response: unknown): PaginatedAnalysesResponse {
   const parsedResponse = paginatedAnalysesResponseSchema.safeParse(response);
 
@@ -45,13 +57,13 @@ function parseHistoryResponse(response: unknown): PaginatedAnalysesResponse {
 
 export async function createAnalysis(
   request: CreateAnalysisRequest,
-): Promise<AnalysisRequestRecord> {
+): Promise<CreateAnalysisResponse> {
   const response = await authenticatedApiRequest<unknown>(ANALYSES_PATH, {
     method: 'POST',
     body: request,
   });
 
-  return parseAnalysisResponse(response);
+  return parseCreateAnalysisResponse(response);
 }
 
 export async function getAnalysis(id: string): Promise<AnalysisRequestRecord> {

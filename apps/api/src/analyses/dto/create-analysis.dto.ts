@@ -1,5 +1,6 @@
 ﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEnum,
   IsObject,
   IsOptional,
@@ -65,4 +66,12 @@ export class CreateAnalysisDto {
   @IsOptional()
   @IsObject()
   parameters?: Record<string, unknown>;
+  @ApiPropertyOptional({
+    description:
+      'Allow an intentional rerun when an identical recent analysis already exists',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  allowDuplicate?: boolean;
 }

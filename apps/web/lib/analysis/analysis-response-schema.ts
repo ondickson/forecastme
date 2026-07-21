@@ -189,6 +189,13 @@ export const analysisRequestRecordSchema = z
     }
   });
 
+export const createAnalysisResponseSchema = z
+  .object({
+    analysis: analysisRequestRecordSchema,
+    duplicate: z.boolean(),
+  })
+  .strict();
+
 export const analysisHistoryItemSchema = z
   .object({
     id: requiredStringSchema,
