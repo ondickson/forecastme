@@ -9,6 +9,7 @@ import { PythonService } from '../python/python.service';
 import { CreateAnalysisDto } from './dto';
 import { Prisma } from '../generated/prisma/client';
 import { AnalysisDomain, AnalysisStatus } from '../generated/prisma/enums';
+import { isDeepStrictEqual } from 'node:util';
 
 interface ListAnalysesOptions {
   userId: string;
@@ -16,6 +17,17 @@ interface ListAnalysesOptions {
   limit: number;
   status?: AnalysisStatus;
   domain?: AnalysisDomain;
+}
+
+const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
+const DUPLICATE_CANDIDATE_LIMIT = 25;
+
+function normalizePrompt(prompt: string): string {
+  return prompt
+    .normalize('NFKC')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('en-US');
 }
 
 const PYTHON_DOMAIN_MAP = {
@@ -33,6 +45,17 @@ export class AnalysesService {
   ) {}
 
   async create(userId: string, dto: CreateAnalysisDto) {
+    if (!dto.allowDuplicate) {
+      const duplicateAnalysis = await this.findRecentDuplicate(userId, dto);
+
+      if (duplicateAnalysis) {
+        return {
+          analysis: duplicateAnalysis,
+          duplicate: true,
+        };
+      }
+    }
+
     const analysis = await this.prisma.analysisRequest.create({
       data: {
         userId,
@@ -104,7 +127,10 @@ export class AnalysesService {
         }),
       ]);
 
-      return this.findById(analysis.id, userId);
+      return {
+        analysis: await this.findById(analysis.id, userId),
+        duplicate: false,
+      };
     } catch (error: unknown) {
       await this.markFailed(analysis.id);
 
@@ -227,6 +253,43 @@ export class AnalysesService {
       success: true,
     };
   }
+
+  private async findRecentDuplicate(userId: string, dto: CreateAnalysisDto) {
+    const duplicateCandidates = await this.prisma.analysisRequest.findMany({
+      where: {
+        userId,
+        domain: dto.domain,
+        conversationId: dto.conversationId ?? null,
+        datasetId: dto.datasetId ?? null,
+        modelVersionId: dto.modelVersionId ?? null,
+        status: {
+          not: AnalysisStatus.FAILED,
+        },
+        createdAt: {
+          gte: new Date(Date.now() - DUPLICATE_WINDOW_MS),
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: DUPLICATE_CANDIDATE_LIMIT,
+      include: {
+        result: true,
+      },
+    });
+
+    const normalizedPrompt = normalizePrompt(dto.prompt);
+    const requestedParameters = dto.parameters ?? null;
+
+    return (
+      duplicateCandidates.find(
+        (candidate) =>
+          normalizePrompt(candidate.prompt) === normalizedPrompt &&
+          isDeepStrictEqual(candidate.parameters, requestedParameters),
+      ) ?? null
+    );
+  }
+
   private async updateStatus(analysisId: string, status: AnalysisStatus) {
     return this.prisma.analysisRequest.update({
       where: {
