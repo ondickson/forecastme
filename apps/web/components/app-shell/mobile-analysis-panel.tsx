@@ -55,8 +55,8 @@ export function MobileAnalysisPanel({
             type="button"
             variant="outline"
             size="sm"
-            className="gap-2 border-indigo-100 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 xl:hidden"
-            aria-label="Open analysis panel"
+            className="gap-2 border-indigo-100 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800"
+            aria-label="Open analysis summary"
           />
         }
       >
@@ -77,11 +77,11 @@ export function MobileAnalysisPanel({
         className="w-[min(30rem,92vw)] gap-0 p-0 sm:max-w-[30rem]"
         showCloseButton
       >
-        <SheetTitle className="sr-only">Analysis details</SheetTitle>
+        <SheetTitle className="sr-only">Analysis summary</SheetTitle>
 
         <SheetDescription className="sr-only">
-          View the prediction, confidence, evidence, risk factors, sources, model information, and
-          data freshness.
+          View the primary conclusion, probability, confidence, and recommended action. Open the
+          complete result for evidence, risks, sources, and methodology.
         </SheetDescription>
 
         <AnalysisPanel

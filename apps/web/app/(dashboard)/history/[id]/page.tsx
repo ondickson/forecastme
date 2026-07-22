@@ -5,7 +5,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Clock3, FileText, LoaderCircle, RotateCcw, Trash2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronDown,
+  LoaderCircle,
+  MoreHorizontal,
+  RotateCcw,
+  Trash2,
+} from 'lucide-react';
 import { AnalysisResultView } from '@/components/analysis-results/analysis-result-view';
 import { ResultEmptyState } from '@/components/analysis-results/result-empty-state';
 import { ResultErrorState } from '@/components/analysis-results/result-error-state';
@@ -21,8 +28,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ApiError } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/analysis/result-formatters';
 import { cn } from '@/lib/utils';
@@ -153,6 +165,20 @@ function formatParameterValue(value: string | null | undefined): string {
     .join(' ');
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) {
+    return '0 B';
+  }
+
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const unitIndex = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / 1024 ** unitIndex;
+
+  return `${new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: unitIndex === 0 ? 0 : 1,
+  }).format(value)} ${units[unitIndex]}`;
+}
+
 export default function AnalysisDetailPage() {
   const params = useParams<{ id: string }>();
   const analysisId = params.id;
@@ -206,7 +232,7 @@ export default function AnalysisDetailPage() {
         <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <Link
             href="/history"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 motion-reduce:transition-none"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             Back to Analyses
@@ -275,7 +301,7 @@ function AnalysisDetail({
   const processing = isProcessingStatus(analysis.status);
   const failed = analysis.status === 'FAILED';
   const completed = analysis.status === 'COMPLETED';
-  const isFailed = analysis.status === 'FAILED';
+  const attachment = analysis.parameters?.attachment;
 
   const statusClassName = failed
     ? undefined
@@ -308,10 +334,10 @@ function AnalysisDetail({
   }
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="mt-6 space-y-8">
       <header className="rounded-2xl border bg-background p-5 shadow-sm sm:p-6">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-          <div className="min-w-0">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
                 {domainLabels[analysis.domain]}
@@ -329,156 +355,155 @@ function AnalysisDetail({
               </Badge>
             </div>
 
-            <div className="mt-4 flex items-start gap-3">
-              <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
-                <FileText className="size-4" aria-hidden="true" />
+            <h1 className="mt-4 [overflow-wrap:anywhere] text-xl font-semibold leading-tight text-foreground sm:text-2xl">
+              {analysis.prompt}
+            </h1>
+
+            <dl className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <dt className="sr-only">Created</dt>
+                <dd>{formatDateTime(analysis.createdAt)}</dd>
               </div>
 
-              <div className="min-w-0">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Original question
-                </p>
-
-                <h1 className="mt-2 break-words text-base font-semibold leading-5 text-foreground sm:text-md sm:leading-7">
-                  {analysis.prompt}
-                </h1>
+              <div className="flex items-center gap-1.5 before:text-border before:content-['•']">
+                <dt>Horizon:</dt>
+                <dd className="font-medium text-foreground">
+                  {formatParameterValue(analysis.parameters?.timeHorizon)}
+                </dd>
               </div>
-            </div>
+
+              <div className="flex items-center gap-1.5 before:text-border before:content-['•']">
+                <dt>Risk:</dt>
+                <dd className="font-medium text-foreground">
+                  {formatParameterValue(analysis.parameters?.riskPreference)}
+                </dd>
+              </div>
+            </dl>
           </div>
 
-          <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Created
-              </p>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Open analysis actions"
+                  disabled={isDeleting}
+                />
+              }
+            >
+              <MoreHorizontal className="size-5" aria-hidden="true" />
+            </DropdownMenuTrigger>
 
-              <p className="mt-1 whitespace-nowrap text-sm font-medium text-foreground">
-                {formatDateTime(analysis.createdAt)}
-              </p>
-            </div>
-
-            <Dialog open={deleteDialogOpen} onOpenChange={handleDeleteDialogOpenChange}>
-              <DialogTrigger render={<Button type="button" variant="destructive" />}>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
                 <Trash2 className="size-4" aria-hidden="true" />
                 Delete analysis
-              </DialogTrigger>
-
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Delete this analysis?</DialogTitle>
-
-                  <DialogDescription>
-                    This permanently deletes the saved question and its result. This action cannot
-                    be undone.
-                  </DialogDescription>
-                </DialogHeader>
-
-                {deleteError ? (
-                  <div
-                    role="alert"
-                    className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
-                  >
-                    {deleteError}
-                  </div>
-                ) : null}
-
-                <DialogFooter>
-                  <DialogClose
-                    render={<Button type="button" variant="outline" disabled={isDeleting} />}
-                  >
-                    Cancel
-                  </DialogClose>
-
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    disabled={isDeleting}
-                    onClick={() => void handleDeleteAnalysis()}
-                  >
-                    {isDeleting ? (
-                      <LoaderCircle
-                        className="size-4 animate-spin motion-reduce:animate-none"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <Trash2 className="size-4" aria-hidden="true" />
-                    )}
-
-                    {isDeleting ? 'Deleting…' : 'Delete permanently'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+
+        <Dialog open={deleteDialogOpen} onOpenChange={handleDeleteDialogOpenChange}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete this analysis?</DialogTitle>
+
+              <DialogDescription>
+                This permanently deletes the saved question and its result. This action cannot be
+                undone.
+              </DialogDescription>
+            </DialogHeader>
+
+            {deleteError ? (
+              <div
+                role="alert"
+                className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                {deleteError}
+              </div>
+            ) : null}
+
+            <DialogFooter>
+              <DialogClose
+                render={<Button type="button" variant="outline" disabled={isDeleting} />}
+              >
+                Cancel
+              </DialogClose>
+
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={() => void handleDeleteAnalysis()}
+              >
+                {isDeleting ? (
+                  <LoaderCircle
+                    className="size-4 animate-spin motion-reduce:animate-none"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Trash2 className="size-4" aria-hidden="true" />
+                )}
+
+                {isDeleting ? 'Deleting…' : 'Delete permanently'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </header>
 
-      <section
-        aria-labelledby="request-details-heading"
-        className="rounded-2xl border bg-background p-5 shadow-sm sm:p-6"
-      >
-        <div className="flex items-center gap-2">
-          <Clock3 className="size-4 text-indigo-700" aria-hidden="true" />
-
-          <h2 id="request-details-heading" className="font-semibold text-foreground">
-            Request details
-          </h2>
-        </div>
-
-        <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <RequestDetail label="Domain" value={domainLabels[analysis.domain]} />
-
-          <RequestDetail
-            label="Time horizon"
-            value={formatParameterValue(analysis.parameters?.timeHorizon)}
+      <details className="group rounded-2xl border bg-background shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-5 py-4 font-semibold text-foreground outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 motion-reduce:transition-none sm:px-6 [&::-webkit-details-marker]:hidden">
+          Request details
+          <ChevronDown
+            className="size-4 text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none"
+            aria-hidden="true"
           />
+        </summary>
 
-          <RequestDetail
-            label="Risk preference"
-            value={formatParameterValue(analysis.parameters?.riskPreference)}
-          />
-
-          <RequestDetail
-            label="Attachment"
-            value={analysis.parameters?.attachment?.name ?? 'Not provided'}
-          />
-
-          <RequestDetail label="Status" value={statusLabels[analysis.status]} />
-
+        <dl className="grid gap-x-8 gap-y-5 border-t px-5 py-5 sm:grid-cols-2 sm:px-6">
+          <RequestDetail label="Created" value={formatDateTime(analysis.createdAt)} />
           <RequestDetail
             label="Completed"
             value={analysis.completedAt ? formatDateTime(analysis.completedAt) : 'Not completed'}
           />
-        </dl>
-      </section>
-
-      <section aria-labelledby="saved-result-heading">
-        <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-          <div>
-            <h2>{isFailed ? 'Analysis outcome' : 'Saved result'}</h2>
-
-            <p className="text-sm text-muted-foreground">
-              {isFailed
-                ? 'This analysis did not produce a result.'
-                : 'The complete result stored for this analysis.'}
-            </p>
-          </div>
-
-          {processing ? (
-            <Button type="button" variant="outline" onClick={onRefresh}>
-              <RotateCcw className="size-4" aria-hidden="true" />
-              Refresh status
-            </Button>
-          ) : null}
-        </div>
-
-        {failed ? (
-          <ResultErrorState
-            title="Analysis failed"
-            message={'ForecastMe could not complete this analysis. No result was produced.'}
+          <RequestDetail label="Attachment" value={attachment?.name ?? 'Not provided'} />
+          <RequestDetail label="File type" value={attachment?.type || 'Not provided'} />
+          <RequestDetail label="Extension" value={attachment?.extension || 'Not provided'} />
+          <RequestDetail
+            label="File size"
+            value={attachment ? formatFileSize(attachment.size) : 'Not provided'}
           />
-        ) : processing ? (
-          <ResultLoadingState status={analysis.status} />
+        </dl>
+      </details>
+
+      <section aria-labelledby="analysis-content-heading" className="min-w-0">
+        <h2 id="analysis-content-heading" className="sr-only">
+          {processing ? 'Analysis progress' : failed ? 'Analysis outcome' : 'Analysis result'}
+        </h2>
+
+        {processing ? (
+          <div className="space-y-4">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+              <p className="text-sm leading-6 text-muted-foreground">
+                ForecastMe is still working on this request. Refresh to check for the latest status.
+              </p>
+
+              <Button type="button" variant="outline" onClick={onRefresh}>
+                <RotateCcw className="size-4" aria-hidden="true" />
+                Refresh status
+              </Button>
+            </div>
+
+            <ResultLoadingState status={analysis.status} />
+          </div>
+        ) : failed ? (
+          <ResultErrorState
+            title="Analysis could not be completed"
+            message="ForecastMe could not complete this request, so no result was saved. You can keep this record for reference or delete it from the analysis actions menu."
+          />
         ) : completed && analysis.result ? (
           <AnalysisResultView result={analysis.result.content} domain={analysis.domain} />
         ) : completed ? (
@@ -499,13 +524,13 @@ function AnalysisDetail({
 
 function RequestDetail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border bg-muted/20 p-4">
+    <div>
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
 
       <dd
         className={cn(
-          'mt-2 break-words text-sm font-semibold text-foreground',
-          value === 'Not provided' && 'font-medium text-muted-foreground',
+          'mt-1 break-words text-sm font-medium text-foreground',
+          (value === 'Not provided' || value === 'Not completed') && 'text-muted-foreground',
         )}
       >
         {value}

@@ -1,12 +1,7 @@
-import { ConfidenceSection } from '@/components/analysis-results/confidence-section';
-import { DataFreshnessSection } from '@/components/analysis-results/data-freshness-section';
-import { DirectAnswerSection } from '@/components/analysis-results/direct-answer-section';
 import { EvidenceSection } from '@/components/analysis-results/evidence-section';
-import { ModelInformationSection } from '@/components/analysis-results/model-information-section';
-import { ProbabilitySection } from '@/components/analysis-results/probability-section';
+import { ForecastSummarySection } from '@/components/analysis-results/forecast-summary-section';
 import { RiskFactorsSection } from '@/components/analysis-results/risk-factors-section';
-import { SourcesSection } from '@/components/analysis-results/sources-section';
-import { SuggestedActionSection } from '@/components/analysis-results/suggested-action-section';
+import { TechnicalDetailsSection } from '@/components/analysis-results/technical-details-section';
 import { cn } from '@/lib/utils';
 import type { AnalysisDomain, AnalysisResult } from '@/types/analysis';
 
@@ -14,34 +9,42 @@ interface AnalysisResultViewProps {
   result: AnalysisResult;
   domain: AnalysisDomain;
   className?: string;
+  variant?: 'full' | 'summary';
 }
 
-export function AnalysisResultView({ result, domain, className }: AnalysisResultViewProps) {
-  const showFinancialRiskNotice = domain === 'FINANCIAL_MARKET';
+export function AnalysisResultView({
+  result,
+  domain,
+  className,
+  variant = 'full',
+}: AnalysisResultViewProps) {
+  const isSummary = variant === 'summary';
 
   return (
-    <section aria-label="Analysis result" className={cn('space-y-4', className)}>
-      <DirectAnswerSection directAnswer={result.directAnswer} />
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <ProbabilitySection probability={result.probability} />
-        <ConfidenceSection confidence={result.confidence} />
-      </div>
-
-      <EvidenceSection evidence={result.evidence} />
-      <RiskFactorsSection riskFactors={result.riskFactors} />
-
-      <SuggestedActionSection
+    <section
+      aria-label={isSummary ? 'Analysis result summary' : 'Analysis result'}
+      className={cn('space-y-4', className)}
+    >
+      <ForecastSummarySection
+        directAnswer={result.directAnswer}
+        probability={result.probability}
+        confidence={result.confidence}
         suggestedAction={result.suggestedAction}
-        showFinancialRiskNotice={showFinancialRiskNotice}
+        domain={domain}
+        variant={isSummary ? 'compact' : 'full'}
       />
 
-      <SourcesSection sources={result.sources} />
-
-      <div className="grid gap-4">
-        <ModelInformationSection model={result.model} />
-        <DataFreshnessSection dataFreshness={result.dataFreshness} />
-      </div>
+      {!isSummary ? (
+        <>
+          <EvidenceSection evidence={result.evidence} sources={result.sources} />
+          <RiskFactorsSection riskFactors={result.riskFactors} />
+          <TechnicalDetailsSection
+            sources={result.sources}
+            model={result.model}
+            dataFreshness={result.dataFreshness}
+          />
+        </>
+      ) : null}
     </section>
   );
 }
