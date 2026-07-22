@@ -1,31 +1,56 @@
 /**
- * Supported ForecastMe analysis domains.
+ * Canonical ForecastMe analysis domains.
  *
- * CUSTOM is used when a request does not fit an existing specialized domain.
+ * Provider platforms such as Polymarket, Kalshi, and sportsbooks are
+ * contexts or data providers, not top-level analysis domains.
  */
-export enum AnalysisDomain {
-  SPORTS = 'sports',
-  BETTING = 'betting',
-  STOCKS = 'stocks',
-  CRYPTO = 'crypto',
-  ECONOMICS = 'economics',
-  WEATHER = 'weather',
-  RISK = 'risk',
-  DATASET = 'dataset',
-  CUSTOM = 'custom',
-}
+export const AnalysisDomain = {
+  GENERAL_RESEARCH: 'GENERAL_RESEARCH',
+  CUSTOM_DATASET: 'CUSTOM_DATASET',
+  SPORTS: 'SPORTS',
+  FINANCIAL_MARKET: 'FINANCIAL_MARKET',
+} as const;
+
+export type AnalysisDomain = (typeof AnalysisDomain)[keyof typeof AnalysisDomain];
 
 /**
- * Lifecycle state of an analysis.
+ * Analytical task detected from the user's request.
  */
-export enum AnalysisStatus {
-  PENDING = 'pending',
-  QUEUED = 'queued',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-}
+export const ClassificationTask = {
+  GENERAL_RESEARCH: 'GENERAL_RESEARCH',
+  DATASET_ANALYSIS: 'DATASET_ANALYSIS',
+  OUTCOME_FORECAST: 'OUTCOME_FORECAST',
+  DIRECTIONAL_FORECAST: 'DIRECTIONAL_FORECAST',
+  COMPARISON: 'COMPARISON',
+  RISK_ASSESSMENT: 'RISK_ASSESSMENT',
+  UNSUPPORTED: 'UNSUPPORTED',
+} as const;
+
+export type ClassificationTask = (typeof ClassificationTask)[keyof typeof ClassificationTask];
+
+/**
+ * Classifier that produced the classification metadata.
+ */
+export const ClassifierSource = {
+  LLM: 'LLM',
+  RULE_BASED_FALLBACK: 'RULE_BASED_FALLBACK',
+} as const;
+
+export type ClassifierSource = (typeof ClassifierSource)[keyof typeof ClassifierSource];
+
+/**
+ * Canonical lifecycle state of an analysis.
+ */
+export const AnalysisStatus = {
+  PENDING: 'PENDING',
+  CLASSIFYING: 'CLASSIFYING',
+  COLLECTING_DATA: 'COLLECTING_DATA',
+  ANALYZING: 'ANALYZING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+} as const;
+
+export type AnalysisStatus = (typeof AnalysisStatus)[keyof typeof AnalysisStatus];
 
 /**
  * User-configurable analysis parameters.
@@ -36,6 +61,28 @@ export interface AnalysisOptions {
   includeConfidence?: boolean;
   timeHorizon?: string;
   riskPreference?: 'low' | 'medium' | 'high';
+}
+
+/**
+ * Metadata produced when the Python service classifies an analysis request.
+ *
+ * Unsupported requests still use one of the four canonical domains and are
+ * identified through isSupported instead of introducing another domain.
+ */
+export interface ClassificationMetadata {
+  domain: AnalysisDomain;
+  task: ClassificationTask;
+  confidence: number;
+  reasoning: string;
+  isSupported: boolean;
+  entities: string[];
+  dates: string[];
+  timeHorizon: string | null;
+  requiresLiveData: boolean;
+  classifier: ClassifierSource;
+  predictionIntent: boolean;
+  comparisonIntent: boolean;
+  riskIntent: boolean;
 }
 
 /**

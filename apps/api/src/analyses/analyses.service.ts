@@ -1,15 +1,20 @@
+import type {
+  AnalysisDomain as ContractAnalysisDomain,
+  ClassificationMetadata,
+} from '@forecastme/contracts';
 import {
   BadGatewayException,
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
+import { isDeepStrictEqual } from 'node:util';
+import { Prisma } from '../generated/prisma/client';
+import { AnalysisDomain, AnalysisStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { PythonService } from '../python/python.service';
 import { CreateAnalysisDto } from './dto';
-import { Prisma } from '../generated/prisma/client';
-import { AnalysisDomain, AnalysisStatus } from '../generated/prisma/enums';
-import { isDeepStrictEqual } from 'node:util';
 
 interface ListAnalysesOptions {
   userId: string;
@@ -31,11 +36,33 @@ function normalizePrompt(prompt: string): string {
 }
 
 const PYTHON_DOMAIN_MAP = {
-  [AnalysisDomain.GENERAL_RESEARCH]: 'general_research',
-  [AnalysisDomain.CUSTOM_DATASET]: 'custom_dataset',
-  [AnalysisDomain.SPORTS]: 'sports',
-  [AnalysisDomain.FINANCIAL_MARKET]: 'financial_market',
+  [AnalysisDomain.GENERAL_RESEARCH]: 'GENERAL_RESEARCH',
+  [AnalysisDomain.CUSTOM_DATASET]: 'CUSTOM_DATASET',
+  [AnalysisDomain.SPORTS]: 'SPORTS',
+  [AnalysisDomain.FINANCIAL_MARKET]: 'FINANCIAL_MARKET',
 } as const;
+
+const CLASSIFICATION_DOMAIN_MAP: Record<
+  ContractAnalysisDomain,
+  AnalysisDomain
+> = {
+  GENERAL_RESEARCH: AnalysisDomain.GENERAL_RESEARCH,
+  CUSTOM_DATASET: AnalysisDomain.CUSTOM_DATASET,
+  SPORTS: AnalysisDomain.SPORTS,
+  FINANCIAL_MARKET: AnalysisDomain.FINANCIAL_MARKET,
+};
+
+function isUnsupportedClassification(
+  classification: ClassificationMetadata,
+): boolean {
+  return !classification.isSupported || classification.task === 'UNSUPPORTED';
+}
+
+class UnsupportedAnalysisException extends UnprocessableEntityException {
+  constructor() {
+    super('This request is not supported by ForecastMe yet.');
+  }
+}
 
 @Injectable()
 export class AnalysesService {
@@ -74,24 +101,73 @@ export class AnalysesService {
           id: analysis.id,
         },
         data: {
-          status: AnalysisStatus.COLLECTING_DATA,
+          status: AnalysisStatus.CLASSIFYING,
           startedAt: new Date(),
           errorCode: null,
           errorMessage: null,
         },
       });
 
-      await this.updateStatus(analysis.id, AnalysisStatus.ANALYZING);
+      const classificationMetadata = await this.pythonService.classify(
+        {
+          prompt: dto.prompt,
+        },
+        analysis.id,
+      );
 
-      const pythonResponse = await this.pythonService.analyze({
-        analysisId: analysis.id,
-        question: dto.prompt,
-        domain: PYTHON_DOMAIN_MAP[dto.domain],
-        options: dto.parameters,
-        correlationId: analysis.id,
+      const classifiedDomain =
+        CLASSIFICATION_DOMAIN_MAP[classificationMetadata.domain];
+
+      if (isUnsupportedClassification(classificationMetadata)) {
+        await this.prisma.analysisRequest.update({
+          where: {
+            id: analysis.id,
+          },
+          data: {
+            domain: classifiedDomain,
+            status: AnalysisStatus.FAILED,
+            classificationMetadata:
+              classificationMetadata as unknown as Prisma.InputJsonValue,
+            errorCode: 'UNSUPPORTED_REQUEST',
+            errorMessage: 'This request is not supported by ForecastMe yet.',
+            completedAt: new Date(),
+          },
+        });
+
+        throw new UnsupportedAnalysisException();
+      }
+
+      await this.prisma.analysisRequest.update({
+        where: {
+          id: analysis.id,
+        },
+        data: {
+          domain: classifiedDomain,
+          status: classificationMetadata.requiresLiveData
+            ? AnalysisStatus.COLLECTING_DATA
+            : AnalysisStatus.ANALYZING,
+          classificationMetadata:
+            classificationMetadata as unknown as Prisma.InputJsonValue,
+        },
       });
+
+      if (classificationMetadata.requiresLiveData) {
+        await this.updateStatus(analysis.id, AnalysisStatus.ANALYZING);
+      }
+
+      const pythonResponse = await this.pythonService.analyze(
+        {
+          analysisId: analysis.id,
+          question: dto.prompt,
+          domain: PYTHON_DOMAIN_MAP[classifiedDomain],
+          options: dto.parameters,
+          correlationId: analysis.id,
+        },
+        analysis.id,
+      );
+
       if (
-        pythonResponse.status !== 'completed' ||
+        pythonResponse.status !== 'COMPLETED' ||
         pythonResponse.result === null
       ) {
         throw new BadGatewayException(
@@ -100,6 +176,7 @@ export class AnalysesService {
       }
 
       const analysisResult = pythonResponse.result;
+
       await this.prisma.$transaction([
         this.prisma.analysisResult.create({
           data: {
@@ -121,9 +198,6 @@ export class AnalysesService {
             errorCode: null,
             errorMessage: null,
           },
-          include: {
-            result: true,
-          },
         }),
       ]);
 
@@ -132,7 +206,9 @@ export class AnalysesService {
         duplicate: false,
       };
     } catch (error: unknown) {
-      await this.markFailed(analysis.id);
+      if (!(error instanceof UnsupportedAnalysisException)) {
+        await this.markFailed(analysis.id);
+      }
 
       throw error;
     }

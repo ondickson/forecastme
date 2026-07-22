@@ -1,14 +1,24 @@
+import logging
 import re
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.core.config import Settings, get_settings
 from app.schemas.classification import (
     AnalysisDomain,
     ClassificationRequest,
     ClassificationResponse,
+    ClassificationTask,
+    ClassifierSource,
+)
+from app.services.openrouter_classifier import (
+    OpenRouterClassificationError,
+    classify_with_openrouter,
 )
 
 router = APIRouter(tags=["Classification"])
+logger = logging.getLogger(__name__)
 
 
 def extract_entities(prompt: str) -> list[str]:
@@ -115,6 +125,73 @@ def contains_any(prompt: str, keywords: set[str]) -> bool:
     return any(keyword in prompt for keyword in keywords)
 
 
+def determine_task(
+    domain: AnalysisDomain,
+    *,
+    is_supported: bool,
+    prediction_intent: bool,
+    comparison_intent: bool,
+    risk_intent: bool,
+) -> ClassificationTask:
+    if not is_supported:
+        return ClassificationTask.UNSUPPORTED
+
+    if comparison_intent:
+        return ClassificationTask.COMPARISON
+
+    if risk_intent:
+        return ClassificationTask.RISK_ASSESSMENT
+
+    if domain == AnalysisDomain.CUSTOM_DATASET:
+        return ClassificationTask.DATASET_ANALYSIS
+
+    if prediction_intent:
+        if domain == AnalysisDomain.FINANCIAL_MARKET:
+            return ClassificationTask.DIRECTIONAL_FORECAST
+
+        return ClassificationTask.OUTCOME_FORECAST
+
+    return ClassificationTask.GENERAL_RESEARCH
+
+
+def determine_live_data_requirement(
+    prompt: str,
+    domain: AnalysisDomain,
+    *,
+    is_supported: bool,
+    prediction_intent: bool,
+) -> bool:
+    if not is_supported or domain == AnalysisDomain.CUSTOM_DATASET:
+        return False
+
+    live_data_keywords = {
+        "current",
+        "currently",
+        "latest",
+        "live",
+        "now",
+        "right now",
+        "today",
+        "tomorrow",
+        "this week",
+        "this month",
+        "this quarter",
+        "this season",
+        "next match",
+        "next game",
+    }
+
+    return (
+        domain
+        in {
+            AnalysisDomain.SPORTS,
+            AnalysisDomain.FINANCIAL_MARKET,
+        }
+        or prediction_intent
+        or contains_any(prompt.lower(), live_data_keywords)
+    )
+
+
 def classify_prompt(prompt: str) -> ClassificationResponse:
     normalized_prompt = prompt.lower()
 
@@ -199,22 +276,51 @@ def classify_prompt(prompt: str) -> ClassificationResponse:
     entities = extract_entities(prompt)
     dates = extract_dates(prompt)
     time_horizon = detect_time_horizon(prompt)
-    prediction_intent = contains_any(normalized_prompt, prediction_keywords)
-    comparison_intent = contains_any(normalized_prompt, comparison_keywords)
-    risk_intent = contains_any(normalized_prompt, risk_keywords)
+    prediction_intent = contains_any(
+        normalized_prompt,
+        prediction_keywords,
+    )
+    comparison_intent = contains_any(
+        normalized_prompt,
+        comparison_keywords,
+    )
+    risk_intent = contains_any(
+        normalized_prompt,
+        risk_keywords,
+    )
 
     def build_response(
         domain: AnalysisDomain,
         confidence: float,
         reasoning: str,
+        is_supported: bool = True,
     ) -> ClassificationResponse:
+        task = determine_task(
+            domain,
+            is_supported=is_supported,
+            prediction_intent=prediction_intent,
+            comparison_intent=comparison_intent,
+            risk_intent=risk_intent,
+        )
+
+        requires_live_data = determine_live_data_requirement(
+            prompt,
+            domain,
+            is_supported=is_supported,
+            prediction_intent=prediction_intent,
+        )
+
         return ClassificationResponse(
             domain=domain,
+            task=task,
             confidence=confidence,
             reasoning=reasoning,
+            isSupported=is_supported,
             entities=entities,
             dates=dates,
             timeHorizon=time_horizon,
+            requiresLiveData=requires_live_data,
+            classifier=ClassifierSource.RULE_BASED_FALLBACK,
             predictionIntent=prediction_intent,
             comparisonIntent=comparison_intent,
             riskIntent=risk_intent,
@@ -222,11 +328,12 @@ def classify_prompt(prompt: str) -> ClassificationResponse:
 
     if contains_any(normalized_prompt, unsupported_keywords):
         return build_response(
-            domain=AnalysisDomain.UNSUPPORTED,
+            domain=AnalysisDomain.GENERAL_RESEARCH,
             confidence=0.95,
             reasoning=(
                 "The prompt requests a domain or capability that is not supported."
             ),
+            is_supported=False,
         )
 
     if contains_any(normalized_prompt, sports_keywords):
@@ -263,5 +370,21 @@ def classify_prompt(prompt: str) -> ClassificationResponse:
 )
 async def classify(
     request: ClassificationRequest,
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> ClassificationResponse:
+    if settings.openrouter_available:
+        try:
+            return await classify_with_openrouter(
+                request.prompt,
+                settings,
+            )
+        except OpenRouterClassificationError as error:
+            logger.warning(
+                (
+                    "OpenRouter classification failed; "
+                    "using rule-based fallback. error_type=%s"
+                ),
+                type(error).__name__,
+            )
+
     return classify_prompt(request.prompt)

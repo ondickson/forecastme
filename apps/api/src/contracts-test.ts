@@ -16,4 +16,4 @@ export const exampleInternalRequest: AnalysisServiceRequest = {
   correlationId: 'correlation_test_001',
 };
 
-export const exampleStatus = AnalysisStatus.PROCESSING;
+export const exampleStatus = AnalysisStatus.ANALYZING;

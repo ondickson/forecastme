@@ -146,6 +146,7 @@ export const AnalysisRequestScalarFieldEnum = {
   domain: 'domain',
   status: 'status',
   parameters: 'parameters',
+  classificationMetadata: 'classificationMetadata',
   errorCode: 'errorCode',
   errorMessage: 'errorMessage',
   startedAt: 'startedAt',

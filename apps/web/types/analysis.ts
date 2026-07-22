@@ -1,9 +1,10 @@
-import type { AnalysisResult } from '@forecastme/contracts';
+import type { AnalysisResult, ClassificationMetadata } from '@forecastme/contracts';
 
 export type {
   AnalysisConfidence,
   AnalysisResult,
   AnalysisSource,
+  ClassificationMetadata,
   ConfidenceLevel,
   DataFreshness,
   EvidenceImpact,
@@ -100,6 +101,7 @@ export interface AnalysisRequestRecord {
   domain: AnalysisDomain;
   status: AnalysisStatus;
   parameters: AnalysisParameters | null;
+  classificationMetadata: ClassificationMetadata | null;
   errorCode: string | null;
   errorMessage: string | null;
   startedAt: string | null;

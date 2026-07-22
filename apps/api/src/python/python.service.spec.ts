@@ -18,13 +18,13 @@ describe('PythonService', () => {
   const request: PythonAnalysisRequest = {
     analysisId: 'analysis-1',
     question: 'Will interest rates fall?',
-    domain: 'financial_market',
+    domain: 'FINANCIAL_MARKET',
     correlationId: 'analysis-1',
   };
 
   const completedResponse = {
     analysisId: 'analysis-1',
-    status: 'completed',
+    status: 'COMPLETED',
     result: {
       directAnswer:
         'No predictive probability is available because no model was executed.',
@@ -95,7 +95,7 @@ describe('PythonService', () => {
   it('accepts a valid failed response from the analysis service', async () => {
     const failedResponse = {
       analysisId: 'analysis-1',
-      status: 'failed',
+      status: 'FAILED' as const,
       result: null,
       processingTimeMs: 15,
       error: {

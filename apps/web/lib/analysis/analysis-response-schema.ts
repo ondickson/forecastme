@@ -1,4 +1,6 @@
 import {
+  ClassifierSource,
+  ClassificationTask,
   confidenceLevels,
   evidenceImpacts,
   freshnessStatuses,
@@ -130,6 +132,24 @@ const parametersSchema = z
   })
   .strict();
 
+const classificationMetadataSchema = z
+  .object({
+    domain: z.enum(ANALYSIS_DOMAINS),
+    task: z.enum(ClassificationTask),
+    confidence: z.number().finite().min(0).max(1),
+    reasoning: requiredStringSchema,
+    isSupported: z.boolean(),
+    entities: z.array(z.string()),
+    dates: z.array(z.string()),
+    timeHorizon: z.string().nullable(),
+    requiresLiveData: z.boolean(),
+    classifier: z.enum(ClassifierSource),
+    predictionIntent: z.boolean(),
+    comparisonIntent: z.boolean(),
+    riskIntent: z.boolean(),
+  })
+  .strict();
+
 export const analysisResultRecordSchema = z
   .object({
     id: requiredStringSchema,
@@ -155,6 +175,7 @@ export const analysisRequestRecordSchema = z
     domain: z.enum(ANALYSIS_DOMAINS),
     status: z.enum(ANALYSIS_STATUSES),
     parameters: parametersSchema.nullable(),
+    classificationMetadata: classificationMetadataSchema.nullable(),
     errorCode: z.string().nullable(),
     errorMessage: z.string().nullable(),
     startedAt: nullableDateTimeSchema,

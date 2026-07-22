@@ -19,7 +19,7 @@ import {
 const resultLevels = ['LOW', 'MEDIUM', 'HIGH'] as const;
 const evidenceImpacts = ['SUPPORTS', 'OPPOSES', 'NEUTRAL'] as const;
 const freshnessStatuses = ['CURRENT', 'AGING', 'STALE', 'UNKNOWN'] as const;
-const terminalStatuses = ['completed', 'failed'] as const;
+const terminalStatuses = ['COMPLETED', 'FAILED'] as const;
 
 export type PythonAnalysisStatus = (typeof terminalStatuses)[number];
 
@@ -267,10 +267,10 @@ export function validatePythonAnalysisResponse(
     !confidence || (confidence.score === null) === (confidence.level === null);
 
   const payloadMatchesStatus =
-    (response.status === 'completed' &&
+    (response.status === 'COMPLETED' &&
       response.result !== null &&
       response.error === null) ||
-    (response.status === 'failed' &&
+    (response.status === 'FAILED' &&
       response.result === null &&
       response.error !== null);
 

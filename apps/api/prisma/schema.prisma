@@ -148,6 +148,7 @@ model AnalysisRequest {
   domain         AnalysisDomain
   status         AnalysisStatus @default(PENDING)
   parameters     Json?
+  classificationMetadata Json?          @map("classification_metadata")
   errorCode      String?        @map("error_code")
   errorMessage   String?        @map("error_message") @db.Text
   startedAt      DateTime?      @map("started_at")

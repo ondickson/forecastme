@@ -68,6 +68,7 @@ export type AnalysisRequestCountAggregateOutputType = {
   domain: number;
   status: number;
   parameters: number;
+  classificationMetadata: number;
   errorCode: number;
   errorMessage: number;
   startedAt: number;
@@ -121,6 +122,7 @@ export type AnalysisRequestCountAggregateInputType = {
   domain?: true;
   status?: true;
   parameters?: true;
+  classificationMetadata?: true;
   errorCode?: true;
   errorMessage?: true;
   startedAt?: true;
@@ -223,6 +225,7 @@ export type AnalysisRequestGroupByOutputType = {
   domain: $Enums.AnalysisDomain;
   status: $Enums.AnalysisStatus;
   parameters: runtime.JsonValue | null;
+  classificationMetadata: runtime.JsonValue | null;
   errorCode: string | null;
   errorMessage: string | null;
   startedAt: Date | null;
@@ -266,6 +269,7 @@ export type AnalysisRequestWhereInput = {
     | Prisma.EnumAnalysisStatusFilter<'AnalysisRequest'>
     | $Enums.AnalysisStatus;
   parameters?: Prisma.JsonNullableFilter<'AnalysisRequest'>;
+  classificationMetadata?: Prisma.JsonNullableFilter<'AnalysisRequest'>;
   errorCode?: Prisma.StringNullableFilter<'AnalysisRequest'> | string | null;
   errorMessage?: Prisma.StringNullableFilter<'AnalysisRequest'> | string | null;
   startedAt?:
@@ -310,6 +314,7 @@ export type AnalysisRequestOrderByWithRelationInput = {
   domain?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
   parameters?: Prisma.SortOrderInput | Prisma.SortOrder;
+  classificationMetadata?: Prisma.SortOrderInput | Prisma.SortOrder;
   errorCode?: Prisma.SortOrderInput | Prisma.SortOrder;
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder;
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -348,6 +353,7 @@ export type AnalysisRequestWhereUniqueInput = Prisma.AtLeast<
       | Prisma.EnumAnalysisStatusFilter<'AnalysisRequest'>
       | $Enums.AnalysisStatus;
     parameters?: Prisma.JsonNullableFilter<'AnalysisRequest'>;
+    classificationMetadata?: Prisma.JsonNullableFilter<'AnalysisRequest'>;
     errorCode?: Prisma.StringNullableFilter<'AnalysisRequest'> | string | null;
     errorMessage?:
       | Prisma.StringNullableFilter<'AnalysisRequest'>
@@ -397,6 +403,7 @@ export type AnalysisRequestOrderByWithAggregationInput = {
   domain?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
   parameters?: Prisma.SortOrderInput | Prisma.SortOrder;
+  classificationMetadata?: Prisma.SortOrderInput | Prisma.SortOrder;
   errorCode?: Prisma.SortOrderInput | Prisma.SortOrder;
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder;
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -438,6 +445,7 @@ export type AnalysisRequestScalarWhereWithAggregatesInput = {
     | Prisma.EnumAnalysisStatusWithAggregatesFilter<'AnalysisRequest'>
     | $Enums.AnalysisStatus;
   parameters?: Prisma.JsonNullableWithAggregatesFilter<'AnalysisRequest'>;
+  classificationMetadata?: Prisma.JsonNullableWithAggregatesFilter<'AnalysisRequest'>;
   errorCode?:
     | Prisma.StringNullableWithAggregatesFilter<'AnalysisRequest'>
     | string
@@ -472,6 +480,9 @@ export type AnalysisRequestCreateInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -496,6 +507,9 @@ export type AnalysisRequestUncheckedCreateInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -516,6 +530,9 @@ export type AnalysisRequestUpdateInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -561,6 +578,9 @@ export type AnalysisRequestUncheckedUpdateInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -592,6 +612,9 @@ export type AnalysisRequestCreateManyInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -610,6 +633,9 @@ export type AnalysisRequestUpdateManyMutationInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -649,6 +675,9 @@ export type AnalysisRequestUncheckedUpdateManyInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -688,6 +717,7 @@ export type AnalysisRequestCountOrderByAggregateInput = {
   domain?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
   parameters?: Prisma.SortOrder;
+  classificationMetadata?: Prisma.SortOrder;
   errorCode?: Prisma.SortOrder;
   errorMessage?: Prisma.SortOrder;
   startedAt?: Prisma.SortOrder;
@@ -1241,6 +1271,9 @@ export type AnalysisRequestCreateWithoutUserInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1263,6 +1296,9 @@ export type AnalysisRequestUncheckedCreateWithoutUserInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1337,6 +1373,7 @@ export type AnalysisRequestScalarWhereInput = {
     | Prisma.EnumAnalysisStatusFilter<'AnalysisRequest'>
     | $Enums.AnalysisStatus;
   parameters?: Prisma.JsonNullableFilter<'AnalysisRequest'>;
+  classificationMetadata?: Prisma.JsonNullableFilter<'AnalysisRequest'>;
   errorCode?: Prisma.StringNullableFilter<'AnalysisRequest'> | string | null;
   errorMessage?: Prisma.StringNullableFilter<'AnalysisRequest'> | string | null;
   startedAt?:
@@ -1359,6 +1396,9 @@ export type AnalysisRequestCreateWithoutConversationInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1381,6 +1421,9 @@ export type AnalysisRequestUncheckedCreateWithoutConversationInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1440,6 +1483,9 @@ export type AnalysisRequestCreateWithoutResultInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1463,6 +1509,9 @@ export type AnalysisRequestUncheckedCreateWithoutResultInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1510,6 +1559,9 @@ export type AnalysisRequestUpdateWithoutResultInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -1554,6 +1606,9 @@ export type AnalysisRequestUncheckedUpdateWithoutResultInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -1580,6 +1635,9 @@ export type AnalysisRequestCreateWithoutDatasetInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1602,6 +1660,9 @@ export type AnalysisRequestUncheckedCreateWithoutDatasetInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1661,6 +1722,9 @@ export type AnalysisRequestCreateWithoutDataSourcesInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1684,6 +1748,9 @@ export type AnalysisRequestUncheckedCreateWithoutDataSourcesInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1731,6 +1798,9 @@ export type AnalysisRequestUpdateWithoutDataSourcesInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -1775,6 +1845,9 @@ export type AnalysisRequestUncheckedUpdateWithoutDataSourcesInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -1801,6 +1874,9 @@ export type AnalysisRequestCreateWithoutModelVersionInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1823,6 +1899,9 @@ export type AnalysisRequestUncheckedCreateWithoutModelVersionInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1885,6 +1964,9 @@ export type AnalysisRequestCreateManyUserInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -1903,6 +1985,9 @@ export type AnalysisRequestUpdateWithoutUserInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -1946,6 +2031,9 @@ export type AnalysisRequestUncheckedUpdateWithoutUserInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -1986,6 +2074,9 @@ export type AnalysisRequestUncheckedUpdateManyWithoutUserInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2014,6 +2105,9 @@ export type AnalysisRequestCreateManyConversationInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -2032,6 +2126,9 @@ export type AnalysisRequestUpdateWithoutConversationInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2072,6 +2169,9 @@ export type AnalysisRequestUncheckedUpdateWithoutConversationInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2109,6 +2209,9 @@ export type AnalysisRequestUncheckedUpdateManyWithoutConversationInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2137,6 +2240,9 @@ export type AnalysisRequestCreateManyDatasetInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -2155,6 +2261,9 @@ export type AnalysisRequestUpdateWithoutDatasetInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2198,6 +2307,9 @@ export type AnalysisRequestUncheckedUpdateWithoutDatasetInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2238,6 +2350,9 @@ export type AnalysisRequestUncheckedUpdateManyWithoutDatasetInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2266,6 +2381,9 @@ export type AnalysisRequestCreateManyModelVersionInput = {
   domain: $Enums.AnalysisDomain;
   status?: $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: string | null;
   errorMessage?: string | null;
   startedAt?: Date | string | null;
@@ -2284,6 +2402,9 @@ export type AnalysisRequestUpdateWithoutModelVersionInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2324,6 +2445,9 @@ export type AnalysisRequestUncheckedUpdateWithoutModelVersionInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2361,6 +2485,9 @@ export type AnalysisRequestUncheckedUpdateManyWithoutModelVersionInput = {
     | Prisma.EnumAnalysisStatusFieldUpdateOperationsInput
     | $Enums.AnalysisStatus;
   parameters?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
+  classificationMetadata?:
+    | Prisma.NullableJsonNullValueInput
+    | runtime.InputJsonValue;
   errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   errorMessage?:
     | Prisma.NullableStringFieldUpdateOperationsInput
@@ -2432,6 +2559,7 @@ export type AnalysisRequestSelect<
     domain?: boolean;
     status?: boolean;
     parameters?: boolean;
+    classificationMetadata?: boolean;
     errorCode?: boolean;
     errorMessage?: boolean;
     startedAt?: boolean;
@@ -2465,6 +2593,7 @@ export type AnalysisRequestSelectCreateManyAndReturn<
     domain?: boolean;
     status?: boolean;
     parameters?: boolean;
+    classificationMetadata?: boolean;
     errorCode?: boolean;
     errorMessage?: boolean;
     startedAt?: boolean;
@@ -2493,6 +2622,7 @@ export type AnalysisRequestSelectUpdateManyAndReturn<
     domain?: boolean;
     status?: boolean;
     parameters?: boolean;
+    classificationMetadata?: boolean;
     errorCode?: boolean;
     errorMessage?: boolean;
     startedAt?: boolean;
@@ -2517,6 +2647,7 @@ export type AnalysisRequestSelectScalar = {
   domain?: boolean;
   status?: boolean;
   parameters?: boolean;
+  classificationMetadata?: boolean;
   errorCode?: boolean;
   errorMessage?: boolean;
   startedAt?: boolean;
@@ -2538,6 +2669,7 @@ export type AnalysisRequestOmit<
   | 'domain'
   | 'status'
   | 'parameters'
+  | 'classificationMetadata'
   | 'errorCode'
   | 'errorMessage'
   | 'startedAt'
@@ -2601,6 +2733,7 @@ export type $AnalysisRequestPayload<
       domain: $Enums.AnalysisDomain;
       status: $Enums.AnalysisStatus;
       parameters: runtime.JsonValue | null;
+      classificationMetadata: runtime.JsonValue | null;
       errorCode: string | null;
       errorMessage: string | null;
       startedAt: Date | null;
@@ -3297,6 +3430,7 @@ export interface AnalysisRequestFieldRefs {
   readonly domain: Prisma.FieldRef<'AnalysisRequest', 'AnalysisDomain'>;
   readonly status: Prisma.FieldRef<'AnalysisRequest', 'AnalysisStatus'>;
   readonly parameters: Prisma.FieldRef<'AnalysisRequest', 'Json'>;
+  readonly classificationMetadata: Prisma.FieldRef<'AnalysisRequest', 'Json'>;
   readonly errorCode: Prisma.FieldRef<'AnalysisRequest', 'String'>;
   readonly errorMessage: Prisma.FieldRef<'AnalysisRequest', 'String'>;
   readonly startedAt: Prisma.FieldRef<'AnalysisRequest', 'DateTime'>;

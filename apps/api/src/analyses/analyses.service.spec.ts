@@ -2,13 +2,17 @@ import {
   BadGatewayException,
   ForbiddenException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { AnalysisDomain, AnalysisStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { PythonService } from '../python/python.service';
 import { AnalysesService } from './analyses.service';
 import { CreateAnalysisDto } from './dto';
-import type { AnalysisResult } from '@forecastme/contracts';
+import type {
+  AnalysisResult,
+  ClassificationMetadata,
+} from '@forecastme/contracts';
 
 describe('AnalysesService', () => {
   let service: AnalysesService;
@@ -127,15 +131,34 @@ describe('AnalysesService', () => {
 
   const completedPythonResponse = {
     analysisId: 'analysis-1',
-    status: 'completed' as const,
+    status: 'COMPLETED' as const,
     result: canonicalResult,
     processingTimeMs: 25,
     error: null,
   };
 
+  const classificationMetadata: ClassificationMetadata = {
+    domain: 'FINANCIAL_MARKET',
+    task: 'DIRECTIONAL_FORECAST',
+    confidence: 0.94,
+    reasoning: 'The request asks about financial-market direction.',
+    isSupported: true,
+    entities: ['Interest rates'],
+    dates: [],
+    timeHorizon: null,
+    requiresLiveData: true,
+    classifier: 'RULE_BASED_FALLBACK',
+    predictionIntent: true,
+    comparisonIntent: false,
+    riskIntent: false,
+  };
+
+  pythonService.classify.mockResolvedValue(classificationMetadata);
+
   beforeEach(() => {
     jest.clearAllMocks();
 
+    pythonService.classify.mockResolvedValue(classificationMetadata);
     prisma.analysisRequest.findMany.mockResolvedValue([]);
 
     prisma.$transaction.mockImplementation(
@@ -152,7 +175,7 @@ describe('AnalysesService', () => {
     it('creates, processes, persists, and completes an analysis', async () => {
       const dto: CreateAnalysisDto = {
         prompt: 'Will interest rates fall?',
-        domain: AnalysisDomain.FINANCIAL_MARKET,
+        domain: AnalysisDomain.GENERAL_RESEARCH,
       };
 
       const createdAnalysis = {
@@ -192,6 +215,23 @@ describe('AnalysesService', () => {
       ]);
 
       const result = await service.create('user-1', dto);
+      expect(pythonService.classify).toHaveBeenCalledWith(
+        {
+          prompt: dto.prompt,
+        },
+        'analysis-1',
+      );
+
+      expect(prisma.analysisRequest.update).toHaveBeenNthCalledWith(2, {
+        where: {
+          id: 'analysis-1',
+        },
+        data: {
+          domain: AnalysisDomain.FINANCIAL_MARKET,
+          status: AnalysisStatus.COLLECTING_DATA,
+          classificationMetadata,
+        },
+      });
 
       expect(prisma.analysisRequest.create).toHaveBeenCalledWith({
         data: {
@@ -205,15 +245,23 @@ describe('AnalysesService', () => {
         },
       });
 
-      expect(pythonService.classify).not.toHaveBeenCalled();
+      expect(pythonService.classify).toHaveBeenCalledWith(
+        {
+          prompt: dto.prompt,
+        },
+        'analysis-1',
+      );
 
-      expect(pythonService.analyze).toHaveBeenCalledWith({
-        analysisId: 'analysis-1',
-        question: dto.prompt,
-        domain: 'financial_market',
-        options: undefined,
-        correlationId: 'analysis-1',
-      });
+      expect(pythonService.analyze).toHaveBeenCalledWith(
+        {
+          analysisId: 'analysis-1',
+          question: dto.prompt,
+          domain: 'FINANCIAL_MARKET',
+          options: undefined,
+          correlationId: 'analysis-1',
+        },
+        'analysis-1',
+      );
 
       expect(prisma.analysisResult.create).toHaveBeenCalledWith({
         data: {
@@ -226,7 +274,7 @@ describe('AnalysesService', () => {
         },
       });
 
-      expect(prisma.analysisRequest.update).toHaveBeenCalledWith({
+      expect(prisma.analysisRequest.update).toHaveBeenLastCalledWith({
         where: {
           id: 'analysis-1',
         },
@@ -236,10 +284,8 @@ describe('AnalysesService', () => {
           errorCode: null,
           errorMessage: null,
         },
-        include: {
-          result: true,
-        },
       });
+
       expect(result).toEqual({
         analysis: completedAnalysis,
         duplicate: false,
@@ -372,7 +418,7 @@ describe('AnalysesService', () => {
 
       pythonService.analyze.mockResolvedValue({
         analysisId: 'analysis-1',
-        status: 'failed',
+        status: 'FAILED',
         result: null,
         processingTimeMs: 25,
         error: {
@@ -436,6 +482,59 @@ describe('AnalysesService', () => {
           completedAt: expect.any(Date) as Date,
         },
       });
+    });
+
+    it('persists and stops an unsupported request before analysis', async () => {
+      const dto: CreateAnalysisDto = {
+        prompt: 'Give me an election prediction.',
+        domain: AnalysisDomain.GENERAL_RESEARCH,
+      };
+
+      const unsupportedClassification: ClassificationMetadata = {
+        domain: 'GENERAL_RESEARCH',
+        task: 'UNSUPPORTED',
+        confidence: 0.98,
+        reasoning: 'Election prediction is not supported in the MVP.',
+        isSupported: false,
+        entities: [],
+        dates: [],
+        timeHorizon: null,
+        requiresLiveData: false,
+        classifier: 'RULE_BASED_FALLBACK',
+        predictionIntent: true,
+        comparisonIntent: false,
+        riskIntent: false,
+      };
+
+      prisma.analysisRequest.create.mockResolvedValue({
+        ...analysisRequest,
+        prompt: dto.prompt,
+        domain: dto.domain,
+      });
+
+      prisma.analysisRequest.update.mockResolvedValue(analysisRequest);
+      pythonService.classify.mockResolvedValue(unsupportedClassification);
+
+      await expect(service.create('user-1', dto)).rejects.toBeInstanceOf(
+        UnprocessableEntityException,
+      );
+
+      expect(prisma.analysisRequest.update).toHaveBeenLastCalledWith({
+        where: {
+          id: 'analysis-1',
+        },
+        data: {
+          domain: AnalysisDomain.GENERAL_RESEARCH,
+          status: AnalysisStatus.FAILED,
+          classificationMetadata: unsupportedClassification,
+          errorCode: 'UNSUPPORTED_REQUEST',
+          errorMessage: 'This request is not supported by ForecastMe yet.',
+          completedAt: expect.any(Date) as Date,
+        },
+      });
+
+      expect(pythonService.analyze).not.toHaveBeenCalled();
+      expect(prisma.analysisResult.create).not.toHaveBeenCalled();
     });
   });
 

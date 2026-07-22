@@ -21,19 +21,19 @@ class ContractModel(BaseModel):
 
 
 class AnalysisDomain(StrEnum):
-    GENERAL_RESEARCH = "general_research"
-    CUSTOM_DATASET = "custom_dataset"
-    SPORTS = "sports"
-    FINANCIAL_MARKET = "financial_market"
+    GENERAL_RESEARCH = "GENERAL_RESEARCH"
+    CUSTOM_DATASET = "CUSTOM_DATASET"
+    SPORTS = "SPORTS"
+    FINANCIAL_MARKET = "FINANCIAL_MARKET"
 
 
 class AnalysisStatus(StrEnum):
-    PENDING = "pending"
-    QUEUED = "queued"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
+    PENDING = "PENDING"
+    CLASSIFYING = "CLASSIFYING"
+    COLLECTING_DATA = "COLLECTING_DATA"
+    ANALYZING = "ANALYZING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
 
 
 class ConfidenceLevel(StrEnum):

@@ -1,13 +1,17 @@
 import { HttpService } from '@nestjs/axios';
 import {
+  BadGatewayException,
   Injectable,
   Logger,
   ServiceUnavailableException,
-  BadGatewayException,
 } from '@nestjs/common';
+import type { ClassificationMetadata } from '@forecastme/contracts';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
-import { AnalysisDomain } from '../generated/prisma/enums';
+import {
+  InvalidPythonClassificationResponseError,
+  validatePythonClassificationResponse,
+} from './dto/classify-response.dto';
 import {
   InvalidPythonAnalysisResponseError,
   type PythonAnalysisResponse,
@@ -16,12 +20,6 @@ import {
 
 export interface ClassifyRequest {
   prompt: string;
-}
-
-export interface ClassifyResponse {
-  domain: AnalysisDomain;
-  confidence: number;
-  reasoning: string;
 }
 
 export interface PythonAnalysisOptions {
@@ -35,7 +33,7 @@ export interface PythonAnalysisOptions {
 export interface PythonAnalysisRequest {
   analysisId: string;
   question: string;
-  domain: 'general_research' | 'custom_dataset' | 'sports' | 'financial_market';
+  domain: 'GENERAL_RESEARCH' | 'CUSTOM_DATASET' | 'SPORTS' | 'FINANCIAL_MARKET';
   options?: PythonAnalysisOptions;
   correlationId?: string;
 }
@@ -49,16 +47,27 @@ export class PythonService {
   async classify(
     request: ClassifyRequest,
     requestId?: string,
-  ): Promise<ClassifyResponse> {
+  ): Promise<ClassificationMetadata> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post<ClassifyResponse>('/classify', request, {
+        this.httpService.post<unknown>('/classify', request, {
           headers: this.createRequestHeaders(requestId),
         }),
       );
 
-      return response.data;
+      return validatePythonClassificationResponse(response.data);
     } catch (error: unknown) {
+      if (error instanceof InvalidPythonClassificationResponseError) {
+        this.logger.error({
+          message: 'Python service returned an invalid classification response',
+          requestId,
+        });
+
+        throw new BadGatewayException(
+          'The analysis service returned an invalid classification response',
+        );
+      }
+
       this.handlePythonServiceError(error, 'classification', requestId);
     }
   }
