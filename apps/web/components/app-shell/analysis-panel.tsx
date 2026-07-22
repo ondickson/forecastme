@@ -1,4 +1,5 @@
-import { LoaderCircle, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, LoaderCircle, Sparkles } from 'lucide-react';
 
 import { AnalysisResultView } from '@/components/analysis-results/analysis-result-view';
 import { ResultEmptyState } from '@/components/analysis-results/result-empty-state';
@@ -45,21 +46,23 @@ export function AnalysisPanel({ analysis, submissionStatus, apiError }: Analysis
   return (
     <aside className="flex h-full flex-col bg-background">
       <div className="flex min-h-16 shrink-0 items-center justify-between gap-4 border-b px-5 py-3">
-        <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
             <Sparkles className="size-4" aria-hidden="true" />
           </div>
 
-          <div>
+          <div className="min-w-0">
             <h2 className="text-sm font-semibold text-foreground">Analysis result</h2>
-            <p className="text-xs text-muted-foreground">Prediction, evidence, and data quality</p>
+            <p className="truncate text-xs text-muted-foreground">
+              Conclusion, probability, confidence, and action
+            </p>
           </div>
         </div>
 
         <Badge variant={isFailed ? 'destructive' : 'secondary'} className={statusClassName}>
-          {isProcessing && (
+          {isProcessing ? (
             <LoaderCircle className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
-          )}
+          ) : null}
 
           {formatValue(visibleStatus)}
         </Badge>
@@ -85,12 +88,28 @@ export function AnalysisPanel({ analysis, submissionStatus, apiError }: Analysis
                 Analysis question
               </p>
 
-              <p className="mt-2 break-words text-sm leading-6 text-foreground">
+              <p className="mt-2 line-clamp-3 [overflow-wrap:anywhere] text-sm leading-6 text-foreground">
                 {analysis.prompt}
               </p>
             </div>
 
-            <AnalysisResultView result={analysis.result.content} domain={analysis.domain} />
+            <AnalysisResultView
+              result={analysis.result.content}
+              domain={analysis.domain}
+              variant="summary"
+            />
+
+            <Link
+              href={`/history/${analysis.id}`}
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+            >
+              View complete result
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+
+            <p className="text-center text-xs leading-5 text-muted-foreground">
+              Evidence, risk factors, sources, and methodology are available in the complete result.
+            </p>
           </div>
         ) : analysis?.status === 'COMPLETED' ? (
           <ResultEmptyState
@@ -102,7 +121,7 @@ export function AnalysisPanel({ analysis, submissionStatus, apiError }: Analysis
         ) : (
           <ResultEmptyState
             title="No analysis selected"
-            description="Configure and submit an analysis request to see its structured result here."
+            description="Configure and submit an analysis request to see its forecast summary here."
           />
         )}
       </div>
