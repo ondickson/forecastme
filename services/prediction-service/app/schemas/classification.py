@@ -2,12 +2,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
-class AnalysisDomain(StrEnum):
-    GENERAL_RESEARCH = "GENERAL_RESEARCH"
-    CUSTOM_DATASET = "CUSTOM_DATASET"
-    SPORTS = "SPORTS"
-    FINANCIAL_MARKET = "FINANCIAL_MARKET"
+from .domain import AnalysisDomain as AnalysisDomain
 
 
 class ClassificationTask(StrEnum):

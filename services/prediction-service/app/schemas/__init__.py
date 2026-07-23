@@ -1,6 +1,5 @@
 from .analysis import (
     AnalysisConfidence,
-    AnalysisDomain,
     AnalysisError,
     AnalysisOptions,
     AnalysisResult,
@@ -18,6 +17,7 @@ from .analysis import (
     StrengthLevel,
 )
 from .common import ApiErrorCode, ErrorResponse, ValidationIssue
+from .domain import AnalysisDomain
 
 __all__ = [
     "AnalysisConfidence",

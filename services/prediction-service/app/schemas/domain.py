@@ -1,0 +1,8 @@
+from enum import StrEnum
+
+
+class AnalysisDomain(StrEnum):
+    GENERAL_RESEARCH = "GENERAL_RESEARCH"
+    CUSTOM_DATASET = "CUSTOM_DATASET"
+    SPORTS = "SPORTS"
+    FINANCIAL_MARKET = "FINANCIAL_MARKET"

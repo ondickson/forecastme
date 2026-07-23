@@ -11,6 +11,8 @@ from pydantic import (
     model_validator,
 )
 
+from .domain import AnalysisDomain
+
 
 class ContractModel(BaseModel):
     model_config = ConfigDict(
@@ -18,13 +20,6 @@ class ContractModel(BaseModel):
         extra="forbid",
         str_strip_whitespace=True,
     )
-
-
-class AnalysisDomain(StrEnum):
-    GENERAL_RESEARCH = "GENERAL_RESEARCH"
-    CUSTOM_DATASET = "CUSTOM_DATASET"
-    SPORTS = "SPORTS"
-    FINANCIAL_MARKET = "FINANCIAL_MARKET"
 
 
 class AnalysisStatus(StrEnum):
