@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app.core.config import Settings, get_settings
-from app.main import app
+from app.main import app, domain_router
 from app.schemas.analysis import (
     AnalysisConfidence,
     AnalysisResult,
@@ -18,6 +18,7 @@ from app.schemas.analysis import (
     FreshnessStatus,
     ModelInformation,
 )
+from app.schemas.domain import AnalysisDomain
 
 
 def get_test_settings() -> Settings:
@@ -124,25 +125,171 @@ def test_classify_skips_openrouter_when_configuration_is_unavailable(
 @pytest.mark.parametrize(
     "domain",
     [
-        "GENERAL_RESEARCH",
-        "CUSTOM_DATASET",
-        "SPORTS",
-        "FINANCIAL_MARKET",
+        AnalysisDomain.GENERAL_RESEARCH,
+        AnalysisDomain.CUSTOM_DATASET,
+        AnalysisDomain.SPORTS,
+        AnalysisDomain.FINANCIAL_MARKET,
     ],
 )
-def test_create_analysis_accepts_current_domains(domain: str) -> None:
+def test_create_analysis_routes_each_domain_and_preserves_contract(
+    monkeypatch: pytest.MonkeyPatch,
+    domain: AnalysisDomain,
+) -> None:
+    process_spies: dict[AnalysisDomain, AsyncMock] = {}
+
+    for registered_domain, handler in domain_router._handlers.items():
+        process_spy = AsyncMock(wraps=handler.process)
+        monkeypatch.setattr(handler, "process", process_spy)
+        process_spies[registered_domain] = process_spy
+
+    analysis_id = f"analysis_{domain.value}"
+    correlation_id = f"correlation_{domain.value}"
+    request_id = f"request_{domain.value}"
+
     response = client.post(
         "/internal/v1/analyses",
+        headers={"X-Request-ID": request_id},
         json={
-            "analysisId": f"analysis_{domain}",
+            "analysisId": analysis_id,
             "question": "Provide a valid analysis for this request.",
-            "domain": domain,
-            "correlationId": f"correlation_{domain}",
+            "domain": domain.value,
+            "correlationId": correlation_id,
         },
     )
 
     assert response.status_code == 200
-    assert response.json()["status"] == "COMPLETED"
+    assert response.headers["X-Request-ID"] == request_id
+
+    body = response.json()
+
+    assert set(body) == {
+        "analysisId",
+        "status",
+        "result",
+        "processingTimeMs",
+        "error",
+    }
+    assert body["analysisId"] == analysis_id
+    assert body["status"] == "COMPLETED"
+    assert body["processingTimeMs"] is None
+    assert body["error"] is None
+
+    result = body["result"]
+
+    assert set(result) == {
+        "directAnswer",
+        "probability",
+        "confidence",
+        "evidence",
+        "riskFactors",
+        "suggestedAction",
+        "sources",
+        "model",
+        "dataFreshness",
+    }
+
+    selected_handler = process_spies[domain]
+    selected_handler.assert_awaited_once()
+
+    await_arguments = selected_handler.await_args
+    assert await_arguments is not None
+
+    routed_request = await_arguments.args[0]
+
+    assert routed_request.analysis_id == analysis_id
+    assert routed_request.domain == domain
+    assert routed_request.correlation_id == correlation_id
+
+    for registered_domain, process_spy in process_spies.items():
+        if registered_domain != domain:
+            process_spy.assert_not_awaited()
+
+    assert sum(process_spy.await_count for process_spy in process_spies.values()) == 1
+
+
+def test_create_analysis_generates_request_id() -> None:
+    response = client.post(
+        "/internal/v1/analyses",
+        json={
+            "analysisId": "analysis_generated_request_id",
+            "question": "Provide a valid analysis for this request.",
+            "domain": "GENERAL_RESEARCH",
+            "correlationId": "correlation_generated_request_id",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Request-ID"].strip()
+
+
+def test_create_analysis_validation_error_preserves_request_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request_id = "request-analysis-validation-001"
+    route_spy = AsyncMock(wraps=domain_router.route)
+
+    monkeypatch.setattr(domain_router, "route", route_spy)
+
+    response = client.post(
+        "/internal/v1/analyses",
+        headers={"X-Request-ID": request_id},
+        json={
+            "analysisId": "analysis_invalid_domain",
+            "question": "Provide a valid analysis for this request.",
+            "domain": "UNMAPPED_DOMAIN",
+            "correlationId": "correlation_invalid_domain",
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.headers["X-Request-ID"] == request_id
+
+    body = response.json()
+
+    assert body["statusCode"] == 422
+    assert body["code"] == "VALIDATION_ERROR"
+    assert body["message"] == "Request validation failed"
+    assert body["requestId"] == request_id
+    assert body["timestamp"]
+    assert any(detail["field"] == "body.domain" for detail in body["details"])
+
+    route_spy.assert_not_awaited()
+
+
+def test_create_analysis_handler_failure_returns_standard_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request_id = "request-analysis-failure-001"
+    handler = domain_router._handlers[AnalysisDomain.SPORTS]
+    process_mock = AsyncMock(
+        side_effect=RuntimeError("Simulated handler failure"),
+    )
+
+    monkeypatch.setattr(handler, "process", process_mock)
+
+    with TestClient(app, raise_server_exceptions=False) as error_client:
+        response = error_client.post(
+            "/internal/v1/analyses",
+            headers={"X-Request-ID": request_id},
+            json={
+                "analysisId": "analysis_handler_failure",
+                "question": "Provide a valid sports analysis.",
+                "domain": "SPORTS",
+                "correlationId": "correlation_handler_failure",
+            },
+        )
+
+    assert response.status_code == 500
+
+    body = response.json()
+
+    assert body["statusCode"] == 500
+    assert body["code"] == "INTERNAL_SERVER_ERROR"
+    assert body["message"] == "An unexpected error occurred"
+    assert body["requestId"] == request_id
+    assert body["timestamp"]
+
+    process_mock.assert_awaited_once()
 
 
 @pytest.mark.parametrize(

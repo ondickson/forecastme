@@ -1,5 +1,3 @@
-from datetime import UTC, datetime
-
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -13,16 +11,14 @@ from app.core.logging import configure_logging
 from app.middleware.request_id import RequestIdMiddleware
 from app.routers.classification import router as classification_router
 from app.routers.health import router as health_router
-from app.schemas.analysis import (
-    AnalysisConfidence,
-    AnalysisResult,
-    AnalysisServiceRequest,
-    AnalysisServiceResponse,
-    AnalysisStatus,
-    DataFreshness,
-    FreshnessStatus,
-    ModelInformation,
+from app.schemas.analysis import AnalysisServiceRequest, AnalysisServiceResponse
+from app.services.analysis_handlers import (
+    CustomDatasetHandler,
+    FinancialMarketHandler,
+    GeneralResearchHandler,
+    SportsHandler,
 )
+from app.services.domain_router import DomainRouter
 
 configure_logging()
 
@@ -50,6 +46,13 @@ app.add_exception_handler(
 app.include_router(health_router)
 app.include_router(classification_router)
 
+domain_router = DomainRouter(
+    general_research_handler=GeneralResearchHandler(),
+    custom_dataset_handler=CustomDatasetHandler(),
+    sports_handler=SportsHandler(),
+    financial_market_handler=FinancialMarketHandler(),
+)
+
 
 @app.get("/")
 async def root() -> dict[str, str]:
@@ -67,36 +70,4 @@ async def root() -> dict[str, str]:
 async def create_analysis(
     request: AnalysisServiceRequest,
 ) -> AnalysisServiceResponse:
-    return AnalysisServiceResponse(
-        analysisId=request.analysis_id,
-        status=AnalysisStatus.COMPLETED,
-        result=AnalysisResult(
-            directAnswer=(
-                "ForecastMe cannot calculate a probability for this request..."
-            ),
-            probability=None,
-            confidence=AnalysisConfidence(
-                score=None,
-                level=None,
-                explanation=(
-                    "Confidence cannot be scored because no probability was calculated."
-                ),
-            ),
-            evidence=[],
-            riskFactors=[],
-            suggestedAction=None,
-            sources=[],
-            model=ModelInformation(
-                name="forecastme-contract-validator",
-                version="0.1.0",
-                method="schema-validation-only",
-            ),
-            dataFreshness=DataFreshness(
-                generatedAt=datetime.now(UTC),
-                dataAsOf=None,
-                status=FreshnessStatus.UNKNOWN,
-            ),
-        ),
-        processingTimeMs=None,
-        error=None,
-    )
+    return await domain_router.route(request)
