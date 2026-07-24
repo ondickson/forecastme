@@ -33,11 +33,13 @@ def create_error_response(
     message: str,
     details: list[ValidationIssue] | None = None,
 ) -> JSONResponse:
+    request_id = get_request_id(request)
+
     error = ErrorResponse(
         statusCode=status_code,
         code=code,
         message=message,
-        requestId=get_request_id(request),
+        requestId=request_id,
         details=details,
         timestamp=datetime.now(UTC),
     )
@@ -49,6 +51,7 @@ def create_error_response(
             by_alias=True,
             exclude_none=True,
         ),
+        headers=({"X-Request-ID": request_id} if request_id is not None else None),
     )
 
 

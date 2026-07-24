@@ -21,6 +21,10 @@ from app.schemas.analysis import (
     ModelInformation,
 )
 from app.schemas.domain import AnalysisDomain
+from app.services.exa_search import (
+    ExaNoResultsError,
+    ExaSearchTimeoutError,
+)
 
 
 def get_test_settings() -> Settings:
@@ -352,6 +356,7 @@ def test_create_analysis_handler_failure_returns_standard_error(
         )
 
     assert response.status_code == 500
+    assert response.headers["X-Request-ID"] == request_id
 
     body = response.json()
 
@@ -362,6 +367,68 @@ def test_create_analysis_handler_failure_returns_standard_error(
     assert body["timestamp"]
 
     process_mock.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "search_error",
+    [
+        pytest.param(
+            ExaSearchTimeoutError("Exa search timed out."),
+            id="provider-timeout",
+        ),
+        pytest.param(
+            ExaNoResultsError("No usable search results were found."),
+            id="no-usable-results",
+        ),
+    ],
+)
+def test_create_general_research_provider_failure_preserves_standard_error(
+    monkeypatch: pytest.MonkeyPatch,
+    search_error: Exception,
+) -> None:
+    request_id = "request-general-research-provider-failure"
+    correlation_id = "correlation-general-research-provider-failure"
+    search_mock = AsyncMock(side_effect=search_error)
+
+    monkeypatch.setattr(
+        main_module,
+        "search_with_exa",
+        search_mock,
+    )
+
+    with TestClient(app, raise_server_exceptions=False) as error_client:
+        response = error_client.post(
+            "/internal/v1/analyses",
+            headers={"X-Request-ID": request_id},
+            json={
+                "analysisId": "analysis_general_research_provider_failure",
+                "question": "What recent evidence exists about reusable rockets?",
+                "domain": "GENERAL_RESEARCH",
+                "correlationId": correlation_id,
+            },
+        )
+
+    assert response.status_code == 500
+    assert response.headers["X-Request-ID"] == request_id
+
+    body = response.json()
+
+    assert body["statusCode"] == 500
+    assert body["code"] == "INTERNAL_SERVER_ERROR"
+    assert body["message"] == "An unexpected error occurred"
+    assert body["requestId"] == request_id
+    assert body["timestamp"]
+
+    search_mock.assert_awaited_once()
+
+    search_arguments = search_mock.await_args
+    assert search_arguments is not None
+    assert search_arguments.args[0] == (
+        "What recent evidence exists about reusable rockets?"
+    )
+    assert search_arguments.kwargs == {
+        "request_id": correlation_id,
+    }
 
 
 @pytest.mark.parametrize(

@@ -125,6 +125,21 @@ def test_search_normalizes_deduplicates_and_caps_results(
     first_source = sources[0]
     second_source = sources[1]
 
+    assert set(
+        first_source.model_dump(
+            by_alias=True,
+            mode="json",
+        )
+    ) == {
+        "id",
+        "title",
+        "url",
+        "publisher",
+        "publicationDate",
+        "retrievedAt",
+        "snippet",
+    }
+
     assert first_source.title == "First source"
     assert str(first_source.url) == "https://example.com/research"
     assert first_source.publisher == "example.com"
