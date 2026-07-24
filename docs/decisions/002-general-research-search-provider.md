@@ -106,15 +106,15 @@ V1 will not introduce:
 
 Each usable Exa result will be normalized into the existing ForecastMe analysis-source model.
 
-| ForecastMe field | Exa value or derivation |
-|---|---|
-| `id` | Deterministic hash of the normalized URL |
-| `title` | `results[].title` |
-| `url` | `results[].url` |
-| `publisher` | Normalized hostname derived from the URL |
-| `publicationDate` | `results[].publishedDate`, otherwise `null` |
-| `retrievedAt` | One timezone-aware UTC timestamp for the search operation |
-| `snippet` | First usable `results[].highlights` value, otherwise `null` |
+| ForecastMe field  | Exa value or derivation                                     |
+| ----------------- | ----------------------------------------------------------- |
+| `id`              | Deterministic hash of the normalized URL                    |
+| `title`           | `results[].title`                                           |
+| `url`             | `results[].url`                                             |
+| `publisher`       | Normalized hostname derived from the URL                    |
+| `publicationDate` | `results[].publishedDate`, otherwise `null`                 |
+| `retrievedAt`     | One timezone-aware UTC timestamp for the search operation   |
+| `snippet`         | First usable `results[].highlights` value, otherwise `null` |
 
 Results will be deduplicated by normalized URL while preserving Exa's ranking order.
 
@@ -124,15 +124,15 @@ ForecastMe will attach no more than five usable unique sources to the existing `
 
 Provider failures will be translated into ForecastMe's existing standardized error response. The existing request ID must be preserved.
 
-| Provider condition | ForecastMe response |
-|---|---|
-| Request timeout | HTTP `504` with `SERVICE_UNAVAILABLE` |
-| Connection or DNS failure | HTTP `503` with `SERVICE_UNAVAILABLE` |
+| Provider condition                  | ForecastMe response                   |
+| ----------------------------------- | ------------------------------------- |
+| Request timeout                     | HTTP `504` with `SERVICE_UNAVAILABLE` |
+| Connection or DNS failure           | HTTP `503` with `SERVICE_UNAVAILABLE` |
 | Missing API key or HTTP `401`/`403` | HTTP `503` with `SERVICE_UNAVAILABLE` |
-| HTTP `429` | HTTP `503` with `SERVICE_UNAVAILABLE` |
-| HTTP `5xx` | HTTP `503` with `SERVICE_UNAVAILABLE` |
-| Malformed successful response | HTTP `502` with `SERVICE_UNAVAILABLE` |
-| No usable normalized results | HTTP `404` with `NOT_FOUND` |
+| HTTP `429`                          | HTTP `503` with `SERVICE_UNAVAILABLE` |
+| HTTP `5xx`                          | HTTP `503` with `SERVICE_UNAVAILABLE` |
+| Malformed successful response       | HTTP `502` with `SERVICE_UNAVAILABLE` |
+| No usable normalized results        | HTTP `404` with `NOT_FOUND`           |
 
 Errors must not expose the Exa API key, authorization headers, or raw provider response bodies.
 
