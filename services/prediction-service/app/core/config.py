@@ -21,12 +21,31 @@ class Settings(BaseSettings):
         le=60,
     )
 
+    exa_api_key: SecretStr | None = None
+    exa_search_result_limit: int = Field(
+        default=5,
+        gt=0,
+        le=5,
+    )
+    exa_search_timeout_seconds: float = Field(
+        default=10.0,
+        gt=0,
+        le=60,
+    )
+
     @property
     def openrouter_available(self) -> bool:
         if not self.openrouter_enabled or self.openrouter_api_key is None:
             return False
 
         return bool(self.openrouter_api_key.get_secret_value().strip())
+
+    @property
+    def exa_available(self) -> bool:
+        if self.exa_api_key is None:
+            return False
+
+        return bool(self.exa_api_key.get_secret_value().strip())
 
 
 @lru_cache
