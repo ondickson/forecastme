@@ -1,11 +1,13 @@
 from datetime import UTC, datetime
 from typing import Protocol
 
+from app.core.config import Settings
 from app.schemas.analysis import (
     AnalysisConfidence,
     AnalysisResult,
     AnalysisServiceRequest,
     AnalysisServiceResponse,
+    AnalysisSource,
     AnalysisStatus,
     DataFreshness,
     FreshnessStatus,
@@ -20,8 +22,20 @@ class AnalysisHandler(Protocol):
     ) -> AnalysisServiceResponse: ...
 
 
+class GeneralResearchSearch(Protocol):
+    async def __call__(
+        self,
+        question: str,
+        settings: Settings,
+        *,
+        request_id: str | None = None,
+    ) -> list[AnalysisSource]: ...
+
+
 def _build_placeholder_response(
     request: AnalysisServiceRequest,
+    *,
+    sources: list[AnalysisSource] | None = None,
 ) -> AnalysisServiceResponse:
     return AnalysisServiceResponse(
         analysisId=request.analysis_id,
@@ -41,7 +55,7 @@ def _build_placeholder_response(
             evidence=[],
             riskFactors=[],
             suggestedAction=None,
-            sources=[],
+            sources=[] if sources is None else sources,
             model=ModelInformation(
                 name="forecastme-contract-validator",
                 version="0.1.0",
@@ -59,11 +73,29 @@ def _build_placeholder_response(
 
 
 class GeneralResearchHandler(AnalysisHandler):
+    def __init__(
+        self,
+        *,
+        settings: Settings,
+        search_provider: GeneralResearchSearch,
+    ) -> None:
+        self._settings = settings
+        self._search_provider = search_provider
+
     async def process(
         self,
         request: AnalysisServiceRequest,
     ) -> AnalysisServiceResponse:
-        return _build_placeholder_response(request)
+        sources = await self._search_provider(
+            request.question,
+            self._settings,
+            request_id=request.correlation_id,
+        )
+
+        return _build_placeholder_response(
+            request,
+            sources=sources,
+        )
 
 
 class CustomDatasetHandler(AnalysisHandler):

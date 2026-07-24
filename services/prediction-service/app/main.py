@@ -1,7 +1,10 @@
-from fastapi import FastAPI
+from typing import Annotated
+
+from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.core.config import Settings, get_settings
 from app.core.exceptions import (
     http_exception_handler,
     unhandled_exception_handler,
@@ -19,6 +22,7 @@ from app.services.analysis_handlers import (
     SportsHandler,
 )
 from app.services.domain_router import DomainRouter
+from app.services.exa_search import search_with_exa
 
 configure_logging()
 
@@ -46,12 +50,17 @@ app.add_exception_handler(
 app.include_router(health_router)
 app.include_router(classification_router)
 
-domain_router = DomainRouter(
-    general_research_handler=GeneralResearchHandler(),
-    custom_dataset_handler=CustomDatasetHandler(),
-    sports_handler=SportsHandler(),
-    financial_market_handler=FinancialMarketHandler(),
-)
+
+def build_domain_router(settings: Settings) -> DomainRouter:
+    return DomainRouter(
+        general_research_handler=GeneralResearchHandler(
+            settings=settings,
+            search_provider=search_with_exa,
+        ),
+        custom_dataset_handler=CustomDatasetHandler(),
+        sports_handler=SportsHandler(),
+        financial_market_handler=FinancialMarketHandler(),
+    )
 
 
 @app.get("/")
@@ -69,5 +78,7 @@ async def root() -> dict[str, str]:
 )
 async def create_analysis(
     request: AnalysisServiceRequest,
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> AnalysisServiceResponse:
+    domain_router = build_domain_router(settings)
     return await domain_router.route(request)

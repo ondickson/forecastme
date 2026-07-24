@@ -7,8 +7,9 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+import app.main as main_module
 from app.core.config import Settings, get_settings
-from app.main import app, domain_router
+from app.main import app
 from app.schemas.analysis import (
     AnalysisConfidence,
     AnalysisResult,
@@ -26,6 +27,7 @@ def get_test_settings() -> Settings:
     return Settings(
         openrouter_enabled=False,
         openrouter_api_key=None,
+        exa_api_key="test-exa-key",
     )
 
 
@@ -136,12 +138,44 @@ def test_create_analysis_routes_each_domain_and_preserves_contract(
     monkeypatch: pytest.MonkeyPatch,
     domain: AnalysisDomain,
 ) -> None:
-    process_spies: dict[AnalysisDomain, AsyncMock] = {}
+    question = "Provide a valid analysis for this request."
 
-    for registered_domain, handler in domain_router._handlers.items():
-        process_spy = AsyncMock(wraps=handler.process)
-        monkeypatch.setattr(handler, "process", process_spy)
-        process_spies[registered_domain] = process_spy
+    normalized_source = AnalysisSource(
+        id="source-day-21e",
+        title="Normalized research source",
+        url="https://example.com/research",
+        publisher="example.com",
+        publicationDate="2026-07-24T08:00:00+00:00",
+        retrievedAt="2026-07-24T09:00:00+00:00",
+        snippet="Relevant normalized source.",
+    )
+
+    search_mock = AsyncMock(return_value=[normalized_source])
+
+    monkeypatch.setattr(
+        main_module,
+        "search_with_exa",
+        search_mock,
+    )
+
+    process_spies: dict[AnalysisDomain, AsyncMock] = {}
+    original_builder = main_module.build_domain_router
+
+    def recording_builder(settings: Settings):
+        router = original_builder(settings)
+
+        for registered_domain, handler in router._handlers.items():
+            process_spy = AsyncMock(wraps=handler.process)
+            monkeypatch.setattr(handler, "process", process_spy)
+            process_spies[registered_domain] = process_spy
+
+        return router
+
+    monkeypatch.setattr(
+        main_module,
+        "build_domain_router",
+        recording_builder,
+    )
 
     analysis_id = f"analysis_{domain.value}"
     correlation_id = f"correlation_{domain.value}"
@@ -152,7 +186,7 @@ def test_create_analysis_routes_each_domain_and_preserves_contract(
         headers={"X-Request-ID": request_id},
         json={
             "analysisId": analysis_id,
-            "question": "Provide a valid analysis for this request.",
+            "question": question,
             "domain": domain.value,
             "correlationId": correlation_id,
         },
@@ -207,6 +241,29 @@ def test_create_analysis_routes_each_domain_and_preserves_contract(
 
     assert sum(process_spy.await_count for process_spy in process_spies.values()) == 1
 
+    if domain == AnalysisDomain.GENERAL_RESEARCH:
+        search_mock.assert_awaited_once()
+
+        search_arguments = search_mock.await_args
+        assert search_arguments is not None
+        assert search_arguments.args[0] == question
+        exa_api_key = search_arguments.args[1].exa_api_key
+        assert exa_api_key is not None
+        assert exa_api_key.get_secret_value() == "test-exa-key"
+        assert search_arguments.kwargs == {
+            "request_id": correlation_id,
+        }
+
+        assert result["sources"] == [
+            normalized_source.model_dump(
+                by_alias=True,
+                mode="json",
+            )
+        ]
+    else:
+        search_mock.assert_not_awaited()
+        assert result["sources"] == []
+
 
 def test_create_analysis_generates_request_id() -> None:
     response = client.post(
@@ -214,7 +271,7 @@ def test_create_analysis_generates_request_id() -> None:
         json={
             "analysisId": "analysis_generated_request_id",
             "question": "Provide a valid analysis for this request.",
-            "domain": "GENERAL_RESEARCH",
+            "domain": "SPORTS",
             "correlationId": "correlation_generated_request_id",
         },
     )
@@ -227,9 +284,13 @@ def test_create_analysis_validation_error_preserves_request_id(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     request_id = "request-analysis-validation-001"
-    route_spy = AsyncMock(wraps=domain_router.route)
+    builder_spy = Mock(wraps=main_module.build_domain_router)
 
-    monkeypatch.setattr(domain_router, "route", route_spy)
+    monkeypatch.setattr(
+        main_module,
+        "build_domain_router",
+        builder_spy,
+    )
 
     response = client.post(
         "/internal/v1/analyses",
@@ -254,19 +315,29 @@ def test_create_analysis_validation_error_preserves_request_id(
     assert body["timestamp"]
     assert any(detail["field"] == "body.domain" for detail in body["details"])
 
-    route_spy.assert_not_awaited()
+    builder_spy.assert_not_called()
 
 
 def test_create_analysis_handler_failure_returns_standard_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     request_id = "request-analysis-failure-001"
-    handler = domain_router._handlers[AnalysisDomain.SPORTS]
     process_mock = AsyncMock(
         side_effect=RuntimeError("Simulated handler failure"),
     )
+    original_builder = main_module.build_domain_router
 
-    monkeypatch.setattr(handler, "process", process_mock)
+    def failing_builder(settings: Settings):
+        router = original_builder(settings)
+        handler = router._handlers[AnalysisDomain.SPORTS]
+        monkeypatch.setattr(handler, "process", process_mock)
+        return router
+
+    monkeypatch.setattr(
+        main_module,
+        "build_domain_router",
+        failing_builder,
+    )
 
     with TestClient(app, raise_server_exceptions=False) as error_client:
         response = error_client.post(
