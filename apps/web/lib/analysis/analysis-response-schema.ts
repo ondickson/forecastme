@@ -79,9 +79,11 @@ const sourceSchema = z
   .object({
     id: requiredStringSchema,
     title: requiredStringSchema,
-    url: z.url().nullable(),
-    publisher: z.string().nullable(),
-    retrievedAt: nullableDateTimeSchema,
+    url: z.url(),
+    publisher: requiredStringSchema,
+    publicationDate: nullableDateTimeSchema,
+    retrievedAt: utcDateTimeSchema,
+    snippet: z.string().nullable(),
   })
   .strict();
 
