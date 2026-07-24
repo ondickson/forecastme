@@ -176,9 +176,11 @@ export interface RiskFactor {
 export interface AnalysisSource {
   id: string;
   title: string;
-  url: string | null;
-  publisher: string | null;
-  retrievedAt: string | null;
+  url: string;
+  publisher: string;
+  publicationDate: string | null;
+  retrievedAt: string;
+  snippet: string | null;
 }
 
 /**

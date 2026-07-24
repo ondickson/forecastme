@@ -10,6 +10,7 @@ import {
   IsUrl,
   Max,
   Min,
+  Matches,
   MinLength,
   ValidateIf,
   ValidateNested,
@@ -86,28 +87,40 @@ class RiskFactorDto {
 }
 
 class AnalysisSourceDto {
+  @IsDefined()
   @IsString()
   @MinLength(1)
   id!: string;
 
+  @IsDefined()
   @IsString()
   @MinLength(1)
   title!: string;
 
   @IsDefined()
-  @ValidateIf((_, value: unknown) => value !== null)
   @IsUrl({ require_protocol: true })
-  url!: string | null;
+  url!: string;
 
   @IsDefined()
-  @ValidateIf((_, value: unknown) => value !== null)
   @IsString()
-  publisher!: string | null;
+  @MinLength(1)
+  publisher!: string;
 
   @IsDefined()
   @ValidateIf((_, value: unknown) => value !== null)
   @IsISO8601({ strict: true, strictSeparator: true })
-  retrievedAt!: string | null;
+  @Matches(/(?:Z|[+-]\d{2}:\d{2})$/)
+  publicationDate!: string | null;
+
+  @IsDefined()
+  @IsISO8601({ strict: true, strictSeparator: true })
+  @Matches(/(?:Z|[+-]\d{2}:\d{2})$/)
+  retrievedAt!: string;
+
+  @IsDefined()
+  @ValidateIf((_, value: unknown) => value !== null)
+  @IsString()
+  snippet!: string | null;
 }
 
 class ModelInformationDto {
@@ -281,7 +294,9 @@ export function validatePythonAnalysisResponse(
         response.result.dataFreshness.dataAsOf.endsWith('Z')) &&
       response.result.sources.every(
         (source) =>
-          source.retrievedAt === null || source.retrievedAt.endsWith('Z'),
+          source.retrievedAt.endsWith('Z') &&
+          (source.publicationDate === null ||
+            source.publicationDate.endsWith('Z')),
       ));
 
   if (!confidenceIsConsistent || !payloadMatchesStatus || !timestampsAreUtc) {

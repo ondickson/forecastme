@@ -133,13 +133,15 @@ class RiskFactor(ContractModel):
 class AnalysisSource(ContractModel):
     id: str = Field(min_length=1)
     title: str = Field(min_length=1)
-    url: HttpUrl | None
-    publisher: str | None
-    retrieved_at: datetime | None = Field(alias="retrievedAt")
+    url: HttpUrl
+    publisher: str = Field(min_length=1)
+    publication_date: datetime | None = Field(alias="publicationDate")
+    retrieved_at: datetime = Field(alias="retrievedAt")
+    snippet: str | None
 
-    @field_validator("retrieved_at")
+    @field_validator("publication_date")
     @classmethod
-    def validate_retrieved_at(
+    def validate_publication_date(
         cls,
         value: datetime | None,
     ) -> datetime | None:
@@ -147,9 +149,32 @@ class AnalysisSource(ContractModel):
             return None
 
         if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("publicationDate must include a timezone")
+
+        return value.astimezone(UTC)
+
+    @field_validator("retrieved_at")
+    @classmethod
+    def validate_retrieved_at(
+        cls,
+        value: datetime,
+    ) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("retrievedAt must include a timezone")
 
         return value.astimezone(UTC)
+
+    @field_validator("snippet")
+    @classmethod
+    def clean_snippet(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        cleaned_value = value.strip()
+        return cleaned_value or None
 
 
 class ModelInformation(ContractModel):

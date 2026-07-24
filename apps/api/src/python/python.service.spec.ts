@@ -22,6 +22,16 @@ describe('PythonService', () => {
     correlationId: 'analysis-1',
   };
 
+  const validSource = {
+    id: 'source-1',
+    title: 'Example research article',
+    url: 'https://example.com/research/article',
+    publisher: 'example.com',
+    publicationDate: '2026-07-18T09:30:00.000Z',
+    retrievedAt: '2026-07-18T10:00:00.000Z',
+    snippet: 'A normalized research result.',
+  };
+
   const completedResponse = {
     analysisId: 'analysis-1',
     status: 'COMPLETED',
@@ -52,6 +62,20 @@ describe('PythonService', () => {
     },
     processingTimeMs: null,
     error: null,
+  };
+
+  const mockCompletedResponseWithSource = (source: unknown) => {
+    httpService.post.mockReturnValue(
+      of({
+        data: {
+          ...completedResponse,
+          result: {
+            ...completedResponse.result,
+            sources: [source],
+          },
+        },
+      }),
+    );
   };
 
   beforeEach(() => {
@@ -90,6 +114,78 @@ describe('PythonService', () => {
     expect(response.result?.riskFactors).toEqual([]);
     expect(response.result?.sources).toEqual([]);
     expect(response.result?.suggestedAction).toBeNull();
+  });
+
+  it('accepts a completed response containing a normalized source', async () => {
+    mockCompletedResponseWithSource(validSource);
+
+    const response = await service.analyze(request);
+
+    expect(response.result?.sources).toEqual([validSource]);
+  });
+
+  it('accepts nullable source publication date and snippet', async () => {
+    const source = {
+      ...validSource,
+      publicationDate: null,
+      snippet: null,
+    };
+
+    mockCompletedResponseWithSource(source);
+
+    const response = await service.analyze(request);
+
+    expect(response.result?.sources).toEqual([source]);
+  });
+
+  it('rejects a source missing a required field', async () => {
+    const source: Partial<typeof validSource> = {
+      ...validSource,
+    };
+
+    delete source.snippet;
+
+    mockCompletedResponseWithSource(source);
+
+    await expect(service.analyze(request)).rejects.toBeInstanceOf(
+      BadGatewayException,
+    );
+  });
+
+  it('rejects a source with an invalid URL', async () => {
+    mockCompletedResponseWithSource({
+      ...validSource,
+      url: 'not-a-valid-url',
+    });
+
+    await expect(service.analyze(request)).rejects.toBeInstanceOf(
+      BadGatewayException,
+    );
+  });
+
+  it.each(['publicationDate', 'retrievedAt'] as const)(
+    'rejects a non-UTC source %s timestamp',
+    async (timestampField) => {
+      mockCompletedResponseWithSource({
+        ...validSource,
+        [timestampField]: '2026-07-18T18:00:00+08:00',
+      });
+
+      await expect(service.analyze(request)).rejects.toBeInstanceOf(
+        BadGatewayException,
+      );
+    },
+  );
+
+  it('rejects provider-specific source fields', async () => {
+    mockCompletedResponseWithSource({
+      ...validSource,
+      exaScore: 0.98,
+    });
+
+    await expect(service.analyze(request)).rejects.toBeInstanceOf(
+      BadGatewayException,
+    );
   });
 
   it('accepts a valid failed response from the analysis service', async () => {

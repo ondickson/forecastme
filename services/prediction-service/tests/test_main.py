@@ -13,6 +13,7 @@ from app.schemas.analysis import (
     AnalysisConfidence,
     AnalysisResult,
     AnalysisServiceResponse,
+    AnalysisSource,
     AnalysisStatus,
     DataFreshness,
     FreshnessStatus,
@@ -780,6 +781,102 @@ def build_valid_result() -> AnalysisResult:
             status=FreshnessStatus.UNKNOWN,
         ),
     )
+
+
+def build_valid_source_payload() -> dict[str, object]:
+    return {
+        "id": "source-1",
+        "title": "Example research article",
+        "url": "https://example.com/research/article",
+        "publisher": "example.com",
+        "publicationDate": "2026-07-18T17:30:00+08:00",
+        "retrievedAt": "2026-07-18T18:00:00+08:00",
+        "snippet": "  A normalized research result.  ",
+    }
+
+
+def test_analysis_source_normalizes_timestamps_and_snippet() -> None:
+    source = AnalysisSource.model_validate(build_valid_source_payload())
+
+    assert source.publication_date == datetime(2026, 7, 18, 9, 30, tzinfo=UTC)
+    assert source.retrieved_at == datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
+    assert source.snippet == "A normalized research result."
+
+    serialized = source.model_dump(by_alias=True, mode="json")
+
+    assert serialized["publicationDate"] == "2026-07-18T09:30:00Z"
+    assert serialized["retrievedAt"] == "2026-07-18T10:00:00Z"
+    assert serialized["snippet"] == "A normalized research result."
+
+
+def test_analysis_source_accepts_nullable_fields() -> None:
+    payload = build_valid_source_payload()
+    payload["publicationDate"] = None
+    payload["snippet"] = None
+
+    source = AnalysisSource.model_validate(payload)
+
+    assert source.publication_date is None
+    assert source.snippet is None
+
+
+def test_analysis_source_normalizes_blank_snippet_to_null() -> None:
+    payload = build_valid_source_payload()
+    payload["snippet"] = "   "
+
+    source = AnalysisSource.model_validate(payload)
+
+    assert source.snippet is None
+
+
+@pytest.mark.parametrize(
+    "missing_field",
+    [
+        "url",
+        "publisher",
+        "publicationDate",
+        "retrievedAt",
+        "snippet",
+    ],
+)
+def test_analysis_source_rejects_missing_required_field(
+    missing_field: str,
+) -> None:
+    payload = build_valid_source_payload()
+    payload.pop(missing_field)
+
+    with pytest.raises(ValidationError):
+        AnalysisSource.model_validate(payload)
+
+
+def test_analysis_source_rejects_invalid_url() -> None:
+    payload = build_valid_source_payload()
+    payload["url"] = "not-a-valid-url"
+
+    with pytest.raises(ValidationError):
+        AnalysisSource.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "timestamp_field",
+    ["publicationDate", "retrievedAt"],
+)
+def test_analysis_source_rejects_timestamp_without_timezone(
+    timestamp_field: str,
+) -> None:
+    payload = build_valid_source_payload()
+    payload[timestamp_field] = "2026-07-18T10:00:00"
+
+    with pytest.raises(ValidationError):
+        AnalysisSource.model_validate(payload)
+
+
+def test_analysis_source_rejects_provider_specific_fields() -> None:
+    payload = build_valid_source_payload()
+    payload["exaScore"] = 0.98
+
+    with pytest.raises(ValidationError):
+        AnalysisSource.model_validate(payload)
 
 
 def test_analysis_result_rejects_probability_above_one() -> None:

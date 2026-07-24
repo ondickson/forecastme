@@ -86,7 +86,9 @@ describe('AnalysesService', () => {
         title: 'Deterministic test source',
         url: 'https://example.com/test-source',
         publisher: 'ForecastMe Tests',
+        publicationDate: '2026-07-18T09:30:00.000Z',
         retrievedAt: '2026-07-18T10:00:00.000Z',
+        snippet: 'Deterministic source used by the analysis service test.',
       },
     ],
     model: {
