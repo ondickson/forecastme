@@ -23,6 +23,9 @@ from app.schemas.analysis import (
 from app.schemas.domain import AnalysisDomain
 from app.services.exa_search import (
     ExaNoResultsError,
+    ExaSearchConfigurationError,
+    ExaSearchError,
+    ExaSearchResponseError,
     ExaSearchTimeoutError,
 )
 
@@ -370,14 +373,46 @@ def test_create_analysis_handler_failure_returns_standard_error(
 
 
 @pytest.mark.parametrize(
-    "search_error",
+    (
+        "search_error",
+        "expected_status",
+        "expected_code",
+        "expected_message",
+    ),
     [
         pytest.param(
             ExaSearchTimeoutError("Exa search timed out."),
+            504,
+            "SERVICE_UNAVAILABLE",
+            "Search provider timed out",
             id="provider-timeout",
         ),
         pytest.param(
+            ExaSearchConfigurationError("Exa search is not configured."),
+            503,
+            "SERVICE_UNAVAILABLE",
+            "Search provider is unavailable",
+            id="provider-configuration",
+        ),
+        pytest.param(
+            ExaSearchResponseError("Invalid Exa search response."),
+            502,
+            "SERVICE_UNAVAILABLE",
+            "Search provider returned an invalid response",
+            id="malformed-provider-response",
+        ),
+        pytest.param(
+            ExaSearchError("Exa search request failed."),
+            503,
+            "SERVICE_UNAVAILABLE",
+            "Search provider is unavailable",
+            id="provider-request-failure",
+        ),
+        pytest.param(
             ExaNoResultsError("No usable search results were found."),
+            404,
+            "NOT_FOUND",
+            "No usable search results were found",
             id="no-usable-results",
         ),
     ],
@@ -385,6 +420,9 @@ def test_create_analysis_handler_failure_returns_standard_error(
 def test_create_general_research_provider_failure_preserves_standard_error(
     monkeypatch: pytest.MonkeyPatch,
     search_error: Exception,
+    expected_status: int,
+    expected_code: str,
+    expected_message: str,
 ) -> None:
     request_id = "request-general-research-provider-failure"
     correlation_id = "correlation-general-research-provider-failure"
@@ -408,14 +446,14 @@ def test_create_general_research_provider_failure_preserves_standard_error(
             },
         )
 
-    assert response.status_code == 500
+    assert response.status_code == expected_status
     assert response.headers["X-Request-ID"] == request_id
 
     body = response.json()
 
-    assert body["statusCode"] == 500
-    assert body["code"] == "INTERNAL_SERVER_ERROR"
-    assert body["message"] == "An unexpected error occurred"
+    assert body["statusCode"] == expected_status
+    assert body["code"] == expected_code
+    assert body["message"] == expected_message
     assert body["requestId"] == request_id
     assert body["timestamp"]
 
@@ -429,6 +467,171 @@ def test_create_general_research_provider_failure_preserves_standard_error(
     assert search_arguments.kwargs == {
         "request_id": correlation_id,
     }
+
+
+def test_create_general_research_normalizes_sources_through_endpoint(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider_response = httpx.Response(
+        200,
+        request=httpx.Request(
+            "POST",
+            "https://api.exa.ai/search",
+        ),
+        json={
+            "results": [
+                {
+                    "title": "Reusable launch systems",
+                    "url": "HTTPS://Example.COM/research/#overview",
+                    "publishedDate": "2026-07-23T08:00:00Z",
+                    "highlights": ["Primary evidence."],
+                },
+                {
+                    "title": "Duplicate result",
+                    "url": "https://example.com/research/",
+                    "highlights": ["Duplicate evidence."],
+                },
+                {
+                    "title": "Second research source",
+                    "url": "https://second.example/report?version=2",
+                    "highlights": ["Second evidence."],
+                },
+                {
+                    "title": "Result beyond cap",
+                    "url": "https://third.example/report",
+                    "highlights": ["This result must not be returned."],
+                },
+            ],
+        },
+    )
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__.return_value = mock_client
+    mock_client.__aexit__.return_value = None
+    mock_client.post.return_value = provider_response
+
+    client_factory = Mock(return_value=mock_client)
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        client_factory,
+    )
+
+    def limited_exa_settings() -> Settings:
+        return Settings(
+            _env_file=None,
+            openrouter_enabled=False,
+            openrouter_api_key=None,
+            exa_api_key="test-exa-key",
+            exa_search_result_limit=2,
+        )
+
+    request_id = "request-day-21g-integration"
+    correlation_id = "correlation-day-21g-integration"
+
+    app.dependency_overrides[get_settings] = limited_exa_settings
+
+    try:
+        response = client.post(
+            "/internal/v1/analyses",
+            headers={"X-Request-ID": request_id},
+            json={
+                "analysisId": "analysis_day_21g_integration",
+                "question": "What evidence exists about reusable launch systems?",
+                "domain": "GENERAL_RESEARCH",
+                "correlationId": correlation_id,
+            },
+        )
+    finally:
+        app.dependency_overrides[get_settings] = get_test_settings
+
+    assert response.status_code == 200
+    assert response.headers["X-Request-ID"] == request_id
+
+    body = response.json()
+
+    assert set(body) == {
+        "analysisId",
+        "status",
+        "result",
+        "processingTimeMs",
+        "error",
+    }
+    assert body["analysisId"] == "analysis_day_21g_integration"
+    assert body["status"] == "COMPLETED"
+    assert body["processingTimeMs"] is None
+    assert body["error"] is None
+
+    result = body["result"]
+
+    assert set(result) == {
+        "directAnswer",
+        "probability",
+        "confidence",
+        "evidence",
+        "riskFactors",
+        "suggestedAction",
+        "sources",
+        "model",
+        "dataFreshness",
+    }
+
+    sources = result["sources"]
+
+    assert len(sources) == 2
+    assert [source["title"] for source in sources] == [
+        "Reusable launch systems",
+        "Second research source",
+    ]
+    assert [source["url"] for source in sources] == [
+        "https://example.com/research",
+        "https://second.example/report?version=2",
+    ]
+    assert len({source["url"] for source in sources}) == 2
+
+    required_source_fields = {
+        "id",
+        "title",
+        "url",
+        "publisher",
+        "publicationDate",
+        "retrievedAt",
+        "snippet",
+    }
+
+    for source in sources:
+        assert set(source) == required_source_fields
+        assert source["id"]
+        assert source["retrievedAt"]
+
+        retrieved_at = datetime.fromisoformat(
+            source["retrievedAt"].replace("Z", "+00:00")
+        )
+        assert retrieved_at.utcoffset() is not None
+
+    assert sources[0]["publisher"] == "example.com"
+    assert sources[0]["publicationDate"] is not None
+    assert sources[0]["snippet"] == "Primary evidence."
+
+    publication_date = datetime.fromisoformat(
+        sources[0]["publicationDate"].replace("Z", "+00:00")
+    )
+    assert publication_date.utcoffset() is not None
+
+    assert sources[1]["publisher"] == "second.example"
+    assert sources[1]["publicationDate"] is None
+    assert sources[1]["snippet"] == "Second evidence."
+
+    client_factory.assert_called_once()
+    mock_client.post.assert_awaited_once()
+
+    provider_call = mock_client.post.await_args
+    assert provider_call is not None
+    assert provider_call.kwargs["json"]["query"] == (
+        "What evidence exists about reusable launch systems?"
+    )
+    assert provider_call.kwargs["json"]["numResults"] == 2
 
 
 @pytest.mark.parametrize(

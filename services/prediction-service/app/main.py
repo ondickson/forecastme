@@ -6,6 +6,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import Settings, get_settings
 from app.core.exceptions import (
+    exa_search_exception_handler,
     http_exception_handler,
     unhandled_exception_handler,
     validation_exception_handler,
@@ -22,7 +23,10 @@ from app.services.analysis_handlers import (
     SportsHandler,
 )
 from app.services.domain_router import DomainRouter
-from app.services.exa_search import search_with_exa
+from app.services.exa_search import (
+    ExaSearchError,
+    search_with_exa,
+)
 
 configure_logging()
 
@@ -41,6 +45,10 @@ app.add_exception_handler(
 app.add_exception_handler(
     StarletteHTTPException,
     http_exception_handler,
+)
+app.add_exception_handler(
+    ExaSearchError,
+    exa_search_exception_handler,
 )
 app.add_exception_handler(
     Exception,

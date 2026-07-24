@@ -12,6 +12,13 @@ from app.schemas.common import (
     ErrorResponse,
     ValidationIssue,
 )
+from app.services.exa_search import (
+    ExaNoResultsError,
+    ExaSearchConfigurationError,
+    ExaSearchError,
+    ExaSearchResponseError,
+    ExaSearchTimeoutError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +115,42 @@ async def http_exception_handler(
         status_code=exception.status_code,
         code=code,
         message=str(exception.detail),
+    )
+
+
+async def exa_search_exception_handler(
+    request: Request,
+    exception: Exception,
+) -> JSONResponse:
+    if not isinstance(exception, ExaSearchError):
+        raise exception
+
+    if isinstance(exception, ExaNoResultsError):
+        status_code = 404
+        code = ApiErrorCode.NOT_FOUND
+        message = "No usable search results were found"
+    elif isinstance(exception, ExaSearchTimeoutError):
+        status_code = 504
+        code = ApiErrorCode.SERVICE_UNAVAILABLE
+        message = "Search provider timed out"
+    elif isinstance(exception, ExaSearchResponseError):
+        status_code = 502
+        code = ApiErrorCode.SERVICE_UNAVAILABLE
+        message = "Search provider returned an invalid response"
+    elif isinstance(exception, ExaSearchConfigurationError):
+        status_code = 503
+        code = ApiErrorCode.SERVICE_UNAVAILABLE
+        message = "Search provider is unavailable"
+    else:
+        status_code = 503
+        code = ApiErrorCode.SERVICE_UNAVAILABLE
+        message = "Search provider is unavailable"
+
+    return create_error_response(
+        request=request,
+        status_code=status_code,
+        code=code,
+        message=message,
     )
 
 

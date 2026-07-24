@@ -44,6 +44,7 @@ The minimum request body will be:
 ```json
 {
   "query": "the general-research question",
+  "type": "auto",
   "numResults": 5,
   "contents": {
     "highlights": true
@@ -85,9 +86,9 @@ The Analysis Service may start without an Exa API key, but a general-research se
 
 ### Client design
 
-ForecastMe will implement one asynchronous `ExaSearchClient` using the existing `httpx.AsyncClient` dependency.
+ForecastMe will implement one asynchronous `search_with_exa()` function using the existing `httpx.AsyncClient` dependency.
 
-The client will be injected directly into `GeneralResearchHandler`.
+The function will be injected directly into `GeneralResearchHandler`.
 
 V1 will not introduce:
 
@@ -111,7 +112,7 @@ Each usable Exa result will be normalized into the existing ForecastMe analysis-
 | `title` | `results[].title` |
 | `url` | `results[].url` |
 | `publisher` | Normalized hostname derived from the URL |
-| `publishedAt` | `results[].publishedDate`, otherwise `null` |
+| `publicationDate` | `results[].publishedDate`, otherwise `null` |
 | `retrievedAt` | One timezone-aware UTC timestamp for the search operation |
 | `snippet` | First usable `results[].highlights` value, otherwise `null` |
 
@@ -123,15 +124,15 @@ ForecastMe will attach no more than five usable unique sources to the existing `
 
 Provider failures will be translated into ForecastMe's existing standardized error response. The existing request ID must be preserved.
 
-| Provider condition | ForecastMe failure category |
+| Provider condition | ForecastMe response |
 |---|---|
-| Request timeout | Dependency timeout |
-| Connection or DNS failure | Search provider unavailable |
-| HTTP `401` or `403` | Search provider configuration or authentication error |
-| HTTP `429` | Search provider rate-limited |
-| HTTP `5xx` | Search provider unavailable |
-| Malformed successful response | Invalid provider response |
-| No usable normalized results | Explicit no-results error |
+| Request timeout | HTTP `504` with `SERVICE_UNAVAILABLE` |
+| Connection or DNS failure | HTTP `503` with `SERVICE_UNAVAILABLE` |
+| Missing API key or HTTP `401`/`403` | HTTP `503` with `SERVICE_UNAVAILABLE` |
+| HTTP `429` | HTTP `503` with `SERVICE_UNAVAILABLE` |
+| HTTP `5xx` | HTTP `503` with `SERVICE_UNAVAILABLE` |
+| Malformed successful response | HTTP `502` with `SERVICE_UNAVAILABLE` |
+| No usable normalized results | HTTP `404` with `NOT_FOUND` |
 
 Errors must not expose the Exa API key, authorization headers, or raw provider response bodies.
 
@@ -140,7 +141,7 @@ Errors must not expose the Exa API key, authorization headers, or raw provider r
 ```text
 GeneralResearchHandler
         ->
-ExaSearchClient
+search_with_exa()
         ->
 Normalize and deduplicate results
         ->
